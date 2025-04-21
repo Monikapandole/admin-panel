@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@layer utilities {
+    input[type='number']::-webkit-inner-spin-button,
+    input[type='number']::-webkit-outer-spin-button {
+      @apply appearance-none;
+    }
+    input[type='number'] {
+      @apply appearance-none;
+    }
+  }
+*{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
