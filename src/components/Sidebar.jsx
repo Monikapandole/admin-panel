@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { FaHome, FaCog, FaUsers ,FaBlackberry} from 'react-icons/fa';
+import { FaHome, FaCog, FaUsers ,FaBlackberry, FaBuilding} from 'react-icons/fa';
 import './Sidebar.css';
 
 function Sidebar() {
@@ -23,6 +23,9 @@ function Sidebar() {
         </li>
         <li className={location.pathname === '/users' ? 'active' : ''}>
           <Link to="/users"><FaUsers /> Users</Link>
+        </li>
+        <li className={location.pathname === '/properties' ? 'active' : ''}>
+          <Link to="/properties"><FaBuilding /> Properties</Link>
         </li>
         <li className={location.pathname === '/settings' ? 'active' : ''}>
           <Link to="/settings"><FaCog /> Settings</Link>

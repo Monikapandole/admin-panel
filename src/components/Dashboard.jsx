@@ -54,7 +54,7 @@ const statCards = [
 
 const Dashboard = () => {
   return (
-    <div className="min-h-screen bg-[#f4f2f9] p-6 font-sans  pt-[80px]">
+    <div className="min-h-screen bg-[#f4f2f9] p-6 font-inter  pt-[80px]">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
