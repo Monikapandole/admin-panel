@@ -5,7 +5,6 @@ import { useSelector } from 'react-redux';
 const PropertyListPage = () => {
     const navigate = useNavigate();
     const properties = useSelector((state) => state.property.properties);
-    console.log(properties, "properties")
     return (
         <div className="p-6">
             <div className="flex justify-between items-center mb-4">

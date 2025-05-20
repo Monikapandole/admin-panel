@@ -4,6 +4,8 @@ import ImageUploader from "../../Utils/ImageUploader";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { addProperty, updateProperty } from "../../redux/propertySlice";
+import StepIndicator from "../../Utils/StepIndicator";
+import { TextField, Select, MenuItem, Button, Typography, Box, Grid, InputLabel, FormControl } from "@mui/material";
 
 const AddPropertyForm = () => {
     const dispatch = useDispatch();
@@ -14,7 +16,6 @@ const AddPropertyForm = () => {
     const existingProperty = useSelector((state) =>
         state.property.properties.find((p) => p.id === Number(id))
     );
-    console.log(id, "id", isEditMode, existingProperty)
 
     const [form, setForm] = useState({
         mobile: "",
@@ -34,77 +35,99 @@ const AddPropertyForm = () => {
         availability: "Immediate",
         availableDate: "",
         description: "",
-        property: "",
         price: "",
         photos: [],
-        mainImage: "",
     });
 
+    const [step, setStep] = useState(1);
+    const [errors, setErrors] = useState({});
+
     useEffect(() => {
-        console.log(id, "id")
         if (isEditMode && existingProperty) {
             setForm(existingProperty);
-            console.log(existingProperty, "existingProperty")
         }
     }, [isEditMode, existingProperty]);
 
-    const [errors, setErrors] = useState({});
-
-    const validate = () => {
+    // Validation per step
+    const validateStep = () => {
         const errs = {};
-        if (!form.mobile.match(/^\d{10}$/)) {
-            errs.mobile = "Mobile number must be 10 digits";
+        if (step === 1) {
+            if (!form.mobile.match(/^\d{10}$/)) errs.mobile = "Mobile number must be 10 digits";
+            if (!form.owner.trim()) errs.owner = "Owner name is required";
+            if (!form.address.trim()) errs.address = "Address is required";
         }
-        if (!form.owner.trim()) errs.owner = "Owner name is required";
-        if (!form.address.trim()) errs.address = "Address is required";
-        if (!form.rooms || form.rooms <= 0) errs.rooms = "Enter valid room count";
-        if (!form.sqft || form.sqft <= 0) errs.sqft = "Enter valid square footage";
-        if (!form.price || form.price <= 0) errs.price = "Enter valid price";
-        // if (form.bathroomImage && form.bathroomImage.size > 2 * 1024 * 1024) {
-        //     errs.bathroomImage = "Bathroom image must be under 2MB";
-        // }
+        if (step === 2) {
+            if (!form.rooms || form.rooms <= 0) errs.rooms = "Enter valid room count";
+            if (!form.sqft || form.sqft <= 0) errs.sqft = "Enter valid square footage";
+            // Add more step 2 validations if needed
+        }
+        if (step === 3) {
+            if (!form.price || form.price <= 0) errs.price = "Enter valid price";
+            // Add more step 3 validations if needed
+        }
         return errs;
     };
 
-    const [dropdownState, setDropdownState] = useState({
-        type: false,
-        purpose: false,
-        furnished: false,
-        preference: false,
-        availability: false,
-    });
+    const handleNext = () => {
+        const stepErrors = validateStep();
+        if (Object.keys(stepErrors).length > 0) {
+            setErrors(stepErrors);
+            return;
+        }
+        setErrors({});
+        setStep((prev) => Math.min(prev + 1, 3));
+    };
 
-    const toggleDropdown = (dropdown) => {
-        setDropdownState((prevState) => ({
-            ...prevState,
-            [dropdown]: !prevState[dropdown],
-        }));
+    const handleBack = () => {
+        setErrors({});
+        setStep((prev) => Math.max(prev - 1, 1));
     };
 
     const handleChange = (e, newFiles = null) => {
-        const { name, value } = e.target;
-      
-        setForm((prev) => {
-          if (newFiles) {
-            const current = prev[name] || [];
-            const combined = [...current, ...newFiles].slice(0, 8);
-            console.log(combined)
+        const { name, value, type, files } = e.target;
 
-            return { ...prev, [name]: combined };
-          }
-      
-          return { ...prev, [name]: value };
-        });
-      
+        // Only do this if newFiles is an array (iterable)
+        if (newFiles && Array.isArray(newFiles)) {
+            setForm((prev) => {
+                const current = prev[name] || [];
+                const combined = [...current, ...newFiles].slice(0, 8);
+                return { ...prev, [name]: combined };
+            });
+            setErrors((prev) => ({ ...prev, [name]: null }));
+            return;
+        }
+
+        if (type === "file") {
+            console.log("Selected file:", files[0]);
+            setForm((prev) => ({ ...prev, [name]: files[0] }));
+        }
+        else {
+            setForm((prev) => ({ ...prev, [name]: value }));
+        }
         setErrors((prev) => ({ ...prev, [name]: null }));
-      };
-      
+    };
+    const [previewUrl, setPreviewUrl] = React.useState(null);
 
+    React.useEffect(() => {
+        if (form.bathroomImage) {
+            const url = URL.createObjectURL(form.bathroomImage);
+            setPreviewUrl(url);
+            return () => URL.revokeObjectURL(url);
+        } else {
+            setPreviewUrl(null);
+        }
+    }, [form.bathroomImage]);
     const handleSubmit = (e) => {
         e.preventDefault();
-        const validationErrors = validate();
-        if (Object.keys(validationErrors).length > 0) {
-            setErrors(validationErrors);
+        const allErrors = {};
+        // Validate all steps on submit:
+        for (let s = 1; s <= 3; s++) {
+            setStep(s);
+            const errs = validateStep();
+            Object.assign(allErrors, errs);
+        }
+        if (Object.keys(allErrors).length > 0) {
+            setErrors(allErrors);
             return;
         }
 
@@ -113,206 +136,376 @@ const AddPropertyForm = () => {
         } else {
             dispatch(addProperty(form));
         }
-
         navigate("/properties");
     };
+    console.log(form.bathroomImage instanceof File); // should be true
 
-    const inputClass = `shadow h-[48px] text-[14px] appearance-none border-[1px] border-b-4 rounded w-full py-2 px-3 text-gray-700 focus:outline-none ${errors.phone_number ? "border-red-500" : "border-black"}`;
+    const inputClass = `shadow h-[48px] text-[14px] appearance-none border-[1px] border-b-4 rounded w-full py-2 px-3 text-gray-700 focus:outline-none`;
     const errorClass = "text-red-500 text-sm";
 
-    const handleSelect = (dropdown, option) => {
-        setForm((prevForm) => ({ ...prevForm, [dropdown]: option }));
-        setDropdownState((prevState) => ({
-            ...prevState,
-            [dropdown]: false,
-        }));
-    };
-
     return (
-        <div className="p-6 max-w-4xl mx-auto">
-            <h2 className="text-2xl font-bold mb-4">
+        <div className="p-6 pt-[5rem] max-w-6xl mx-auto justify-center flex flex-col" >
+          <Typography variant="h4" mb={3}>
                 {isEditMode ? "Edit Property Details" : "Add Property Details"}
-            </h2>
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label htmlFor="mobile">Mobile Number</label>
-                    <input
-                        className={inputClass}
-                        id="mobile"
-                        type="text"
-                        name="mobile"
-                        value={form.mobile}
-                        onChange={(e) => {
-                            const digitsOnly = e.target.value.replace(/\D/g, "");
-                            setForm((prev) => ({ ...prev, mobile: digitsOnly }));
-                            setErrors((prev) => ({ ...prev, mobile: null }));
+            </Typography>
+            <StepIndicator currentStep={step}/>
+
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
+                {step === 1 && (
+                    <>
+                        <Box
+                            sx={{
+                                p: 4,
+                                backgroundColor: "#fff",
+                                borderRadius: 2,
+                                boxShadow: 3,
+                                mt: 3
+                            }}
+                        >
+                            <Typography variant="h5" gutterBottom>
+                                Enter Owner and Contact Info
+                            </Typography>
+
+                            {/* Row 1 */}
+                            <Box sx={{ display: "flex", gap: 2, mb: 2, mt: 4 }}>
+                                <TextField
+                                    label="Mobile Number"
+                                    name="mobile"
+                                    value={form.mobile}
+                                    onChange={(e) => {
+                                        const digitsOnly = e.target.value.replace(/\D/g, "");
+                                        setForm((prev) => ({ ...prev, mobile: digitsOnly }));
+                                        setErrors((prev) => ({ ...prev, mobile: null }));
+                                    }}
+                                    fullWidth
+                                    error={!!errors.mobile}
+                                    helperText={errors.mobile}
+                                />
+                                <TextField
+                                    label="Owner Name"
+                                    name="owner"
+                                    value={form.owner}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    error={!!errors.owner}
+                                    helperText={errors.owner}
+                                />
+                            </Box>
+
+                            {/* Row 2 */}
+                            <Box sx={{ display: "flex", gap: 2, mb: 2, mt: 4 }}>
+                                <FormControl fullWidth>
+                                    <InputLabel>Property Type</InputLabel>
+                                    <Select
+                                        name="type"
+                                        value={form.type}
+                                        onChange={handleChange}
+                                        label="Property Type"
+                                    >
+                                        {["Room", "1RK", "Flat (1BHK)", "Flat (2BHK)", "Flat (3BHK)", "House", "Shop", "PG/Hostel"].map((option) => (
+                                            <MenuItem key={option} value={option}>{option}</MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+
+                                <FormControl fullWidth>
+                                    <InputLabel>Purpose</InputLabel>
+                                    <Select
+                                        name="purpose"
+                                        value={form.purpose}
+                                        onChange={handleChange}
+                                        label="Purpose"
+                                    >
+                                        {["For Rent", "For Sale"].map((option) => (
+                                            <MenuItem key={option} value={option}>{option}</MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Box>
+
+                            {/* Row 3 */}
+                            <Box sx={{ display: "flex", gap: 2, mb: 2, mt: 4 }}>
+                                <TextField
+                                    label="Nearby Places"
+                                    name="nearby"
+                                    value={form.nearby}
+                                    onChange={handleChange}
+                                    fullWidth
+                                />
+                                <TextField
+                                    label="Address"
+                                    name="address"
+                                    value={form.address}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    error={!!errors.address}
+                                    helperText={errors.address}
+                                />
+                            </Box>
+
+                            {/* Row 4 - Full Width */}
+                            <Box sx={{ mb: 2, mt: 4 }}>
+                                <GooglePlacesAutocomplete
+                                    apiKey="YOUR_API_KEY"
+                                    selectProps={{
+                                        value: form.location,
+                                        onChange: (newValue) =>
+                                            setForm((prev) => ({ ...prev, location: newValue.label })),
+                                        placeholder: "Search location...",
+                                        styles: {
+                                            control: (base) => ({
+                                                ...base,
+                                                backgroundColor: "#f9f9f9",
+                                                borderRadius: "8px",
+                                                padding: "10px",
+                                                fontSize: "16px",
+                                                borderColor: "#ccc",
+                                                minHeight: "56px",
+                                            }),
+                                        },
+                                    }}
+                                    debounce={400}
+                                />
+                            </Box>
+                        </Box>
+
+
+                    </>
+                )}
+                {step === 2 && (
+                    <Box
+                        sx={{
+                            p: 4,
+                            backgroundColor: "#fff",
+                            borderRadius: 2,
+                            boxShadow: 3,
                         }}
-                    />
-                    {errors.mobile && <div className={errorClass}>{errors.mobile}</div>}
-                </div>
+                    >
+                        <Typography variant="h5" gutterBottom>
+                            Enter Property Details
+                        </Typography>
 
-                <div>
-                    <label htmlFor="owner">Owner Name</label>
-                    <input id="owner" name="owner" value={form.owner} onChange={handleChange} className={inputClass} />
-                    {errors.owner && <div className={errorClass}>{errors.owner}</div>}
-                </div>
+                        {/* Row 1 */}
+                        <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+                            <TextField
+                                label="Number of Rooms"
+                                name="rooms"
+                                type="number"
+                                value={form.rooms}
+                                onChange={handleChange}
+                                fullWidth
+                                error={!!errors.rooms}
+                                helperText={errors.rooms}
+                            />
+                            <TextField
+                                label="Square Footage"
+                                name="sqft"
+                                type="number"
+                                value={form.sqft}
+                                onChange={handleChange}
+                                fullWidth
+                                error={!!errors.sqft}
+                                helperText={errors.sqft}
+                            />
+                        </Box>
 
-                <div className="relative">
-                    <label htmlFor="type">Property Type</label>
-                    <div className={inputClass} onClick={() => toggleDropdown("type")}>
-                        {form.type}
-                    </div>
-                    {dropdownState.type && (
-                        <div className="absolute top-full left-0 w-full bg-white mt-1 rounded-md shadow-lg overflow-hidden z-20">
-                            {["Room", "1RK", "Flat (1BHK)", "Flat (2BHK)", "Flat (3BHK)", "House", "Shop", "PG/Hostel"].map((option) => (
-                                <div key={option} className="p-2 hover:bg-gray-200 cursor-pointer" onClick={() => handleSelect("type", option)}>
-                                    {option}
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
+                        {/* Row 2 */}
+                        <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+                            <Button variant="outlined" component="label" fullWidth>
+                                Upload Bathroom Image
+                                <input
+                                    type="file"
+                                    name="bathroomImage"
+                                    accept="image/*"
+                                    hidden
+                                    onChange={handleChange}
+                                />
+                            </Button>
+                           
+                            <TextField
+                                label="Floor"
+                                name="floor"
+                                value={form.floor}
+                                onChange={handleChange}
+                                fullWidth
+                            />
+                        </Box>
+                         {previewUrl && (
+                                <Box mt={2} mb={4}>
+                                    <img
+                                        src={previewUrl}
+                                        alt="Bathroom"
+                                        style={{ maxWidth: "200px", maxHeight: "150px", borderRadius: "8px" }}
+                                    />
+                                </Box>
+                            )}
 
-                <div className="relative">
-                    <label htmlFor="purpose">Purpose</label>
-                    <div className={inputClass} onClick={() => toggleDropdown("purpose")}>
-                        {form.purpose}
-                    </div>
-                    {dropdownState.purpose && (
-                        <div className="absolute top-full left-0 w-full bg-white mt-1 rounded-md shadow-lg overflow-hidden z-20">
-                            {["For Rent", "For Sale"].map((option) => (
-                                <div key={option} className="p-2 hover:bg-gray-200 cursor-pointer" onClick={() => handleSelect("purpose", option)}>
-                                    {option}
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
+                        {/* Row 3 */}
+                        <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+                            <FormControl fullWidth>
+                                <InputLabel>Furnished</InputLabel>
+                                <Select
+                                    name="furnished"
+                                    value={form.furnished}
+                                    onChange={handleChange}
+                                    label="Furnished"
+                                >
+                                    {["None", "Semi-Furnished", "Fully Furnished"].map((option) => (
+                                        <MenuItem key={option} value={option}>
+                                            {option}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                            <TextField
+                                label="Amenities"
+                                name="amenities"
+                                value={form.amenities}
+                                onChange={handleChange}
+                                fullWidth
+                            />
+                        </Box>
 
-                <div>
-                    <label htmlFor="location">Location</label>
-                    <GooglePlacesAutocomplete
-                        apiKey="AIzaSyDlAHAiEHJtSN26uU9IDg9qCH_2B2eaARo"
-                        selectProps={{
-                            value: form.location,
-                            onChange: (newValue) => setForm({ ...form, location: newValue.label }),
+                        {/* Row 4 */}
+                        <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+                            <FormControl fullWidth>
+                                <InputLabel>Tenant Preference</InputLabel>
+                                <Select
+                                    name="preference"
+                                    value={form.preference}
+                                    onChange={handleChange}
+                                    label="Tenant Preference"
+                                >
+                                    {["Boys", "Girls", "Family", "Independent", "Non-Independent"].map(
+                                        (option) => (
+                                            <MenuItem key={option} value={option}>
+                                                {option}
+                                            </MenuItem>
+                                        )
+                                    )}
+                                </Select>
+                            </FormControl>
+
+                            <FormControl fullWidth>
+                                <InputLabel>Availability</InputLabel>
+                                <Select
+                                    name="availability"
+                                    value={form.availability}
+                                    onChange={handleChange}
+                                    label="Availability"
+                                >
+                                    {["Immediate", "Select Date"].map((option) => (
+                                        <MenuItem key={option} value={option}>
+                                            {option}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+
+                                {form.availability === "Select Date" && (
+                                    <TextField
+                                        type="date"
+                                        name="availableDate"
+                                        value={form.availableDate}
+                                        onChange={handleChange}
+                                        fullWidth
+                                        sx={{ mt: 2 }}
+                                    />
+                                )}
+                            </FormControl>
+                        </Box>
+                    </Box>
+                )}
+
+
+
+
+
+                {step === 3 && (
+                    <Box
+                        sx={{
+
+                            p: 4,
+                            backgroundColor: "#fff",
+                            borderRadius: 2,
+                            boxShadow: 3,
                         }}
-                        placeholder="Location"
-                        debounce={500}
-                        styles={{
-                            container: { width: "100%" },
-                            input: { ...inputClass },
-                            menu: { zIndex: 1000 },
-                        }}
-                    />
-                    {errors.location && <div className={errorClass}>{errors.location}</div>}
-                </div>
+                    >
+                        <Typography variant="h5" gutterBottom>
+                            Additional Details
+                        </Typography>
 
-                <div>
-                    <label htmlFor="nearby">Nearby Places</label>
-                    <input id="nearby" name="nearby" value={form.nearby} onChange={handleChange} className={inputClass} />
-                </div>
+                        {/* Description - full width */}
+                        <Box sx={{ mb: 2 }}>
+                            <TextField
+                                label="Property Description"
+                                name="description"
+                                value={form.description}
+                                onChange={handleChange}
+                                multiline
+                                rows={4}
+                                fullWidth
+                            />
+                        </Box>
 
-                <div>
-                    <label htmlFor="address">Address</label>
-                    <input id="address" name="address" value={form.address} onChange={handleChange} className={inputClass} />
-                    {errors.address && <div className={errorClass}>{errors.address}</div>}
-                </div>
+                        {/* Image Uploader - full width */}
+                        <Box sx={{ mb: 2 }}>
+                            <ImageUploader
+                                inputClass={inputClass}
+                                errors={errors}
+                                handleChange={handleChange}
+                            />
+                        </Box>
 
-                <div>
-                    <label htmlFor="rooms">Number of Rooms</label>
-                    <input id="rooms" name="rooms" value={form.rooms} onChange={handleChange} type="number" className={inputClass} />
-                    {errors.rooms && <div className={errorClass}>{errors.rooms}</div>}
-                </div>
+                        {/* Price */}
+                        <Box sx={{ maxWidth: "300px" }}>
+                            <TextField
+                                label="Price"
+                                name="price"
+                                type="number"
+                                value={form.price}
+                                onChange={handleChange}
+                                fullWidth
+                                error={!!errors.price}
+                                helperText={errors.price}
+                            />
+                        </Box>
+                    </Box>
+                )}
 
-                <div>
-                    <label htmlFor="sqft">Square Footage</label>
-                    <input id="sqft" name="sqft" value={form.sqft} onChange={handleChange} type="number" className={inputClass} />
-                    {errors.sqft && <div className={errorClass}>{errors.sqft}</div>}
-                </div>
 
-                <div>
-                    <label htmlFor="bathroomImage">Bathroom Image</label>
-                    <input id="bathroomImage" name="bathroomImage" onChange={handleChange} type="file" accept="image/*" className={inputClass} />
-                    {errors.bathroomImage && <div className={errorClass}>{errors.bathroomImage}</div>}
-                </div>
 
-                <div>
-                    <label htmlFor="floor">Floor</label>
-                    <input id="floor" name="floor" value={form.floor} onChange={handleChange} className={inputClass} />
-                </div>
-
-                <div>
-                    <label htmlFor="amenities">Amenities</label>
-                    <input id="amenities" name="amenities" value={form.amenities} onChange={handleChange} className={inputClass} />
-                </div>
-
-                <div className="relative">
-                    <label htmlFor="preference">Tenant Preference</label>
-                    <div className={inputClass} onClick={() => toggleDropdown("preference")}>
-                        {form.preference}
-                    </div>
-                    {dropdownState.preference && (
-                        <div className="absolute top-full left-0 w-full bg-white mt-1 rounded-md shadow-lg overflow-hidden z-20">
-                            {["Boys", "Girls", "Family", "Independent", "Non-Independent"].map((option) => (
-                                <div key={option} className="p-2 hover:bg-gray-200 cursor-pointer" onClick={() => handleSelect("preference", option)}>
-                                    {option}
-                                </div>
-                            ))}
-                        </div>
+                <div className="flex justify-between mt-4">
+                    {step > 1 && (
+                        <button
+                            type="button"
+                            onClick={handleBack}
+                            className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
+                        >
+                            Back
+                        </button>
+                    )}
+                    {step < 3 && (
+                        <button
+                            type="button"
+                            onClick={handleNext}
+                            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ml-auto"
+                        >
+                            Next
+                        </button>
+                    )}
+                    {step === 3 && (
+                        <button
+                            type="submit"
+                            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 ml-auto"
+                        >
+                            {isEditMode ? "Update Property" : "Submit Property"}
+                        </button>
                     )}
                 </div>
-
-                <div className="relative">
-                    <label htmlFor="availability">Availability</label>
-                    <div className={inputClass} onClick={() => toggleDropdown("availability")}>
-                        {form.availability}
-                    </div>
-                    {dropdownState.availability && (
-                        <div className="absolute top-full left-0 w-full bg-white mt-1 rounded-md shadow-lg overflow-hidden z-20">
-                            {["Immediate", "Select Date"].map((option) => (
-                                <div key={option} className="p-2 hover:bg-gray-200 cursor-pointer" onClick={() => handleSelect("availability", option)}>
-                                    {option}
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                    {form.availability === "Select Date" && (
-                        <input type="date" name="availableDate" className={`${inputClass} mt-2`} onChange={handleChange} />
-                    )}
-                </div>
-
-                <div className="col-span-full">
-                    <label htmlFor="description">Property Description</label>
-                    <textarea
-                        id="description"
-                        name="description"
-                        value={form.description}
-                        onChange={handleChange}
-                        rows={4}
-                        className={`${inputClass} resize-none`}
-                    />
-                </div>
-
-                <ImageUploader
-                    inputClass={inputClass}
-                    errorClass={errorClass}
-                    errors={errors}
-                    handleChange={handleChange}
-                />
-
-                <div>
-                    <label htmlFor="price">Price</label>
-                    <input id="price" name="price" value={form.price} onChange={handleChange} type="number" className={inputClass} />
-                    {errors.price && <div className={errorClass}>{errors.price}</div>}
-                </div>
-
-                <button type="submit" className="col-span-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-                    {isEditMode ? "Update Property" : "Submit Property"}
-                </button>
             </form>
         </div>
     );
 };
 
 export default AddPropertyForm;
+
