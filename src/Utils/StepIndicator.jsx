@@ -10,7 +10,7 @@ const StepIndicator = ({ currentStep }) => {
         const isActive = currentStep === stepNum;
 
         return (
-          <div key={index} className="flex items-center">
+          <div key={index} className="flex items-center justify-center md:justify-start">
             {/* Step Circle and Label */}
             <div className="flex flex-col items-center">
               <div
@@ -20,9 +20,8 @@ const StepIndicator = ({ currentStep }) => {
                 {stepNum}
               </div>
               <div
-                className={`mt-2 text-sm ${
-                  isActive ? "text-black font-medium" : "text-gray-500"
-                }`}
+                className={`mt-2 text-sm  text-center ${isActive ? "text-black font-medium" : "text-gray-500"
+                  }`}
               >
                 {label}
               </div>
@@ -30,8 +29,8 @@ const StepIndicator = ({ currentStep }) => {
 
             {/* Line between steps */}
             {index < steps.length - 1 && (
-                
-              <div className="w-[15rem] h-0.5 bg-gray-300  mb-[30px]"></div>
+
+              <div className="w-[55px] sm:w-60 md:w-72 lg:w-96 h-0.5 bg-gray-300 mb-8"></div>
             )}
           </div>
         );

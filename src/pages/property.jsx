@@ -6,7 +6,7 @@ const PropertyListPage = () => {
     const navigate = useNavigate();
     const properties = useSelector((state) => state.property.properties);
     return (
-        <div className="p-6">
+        <div className="p-6 pt-[80px]">
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Properties</h2>
                 <button

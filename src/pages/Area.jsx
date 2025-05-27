@@ -1,19 +1,19 @@
 import React, { useState } from "react";
 import icon1 from "../assets/react.svg";
 import icon2 from "../assets/react.svg";
-function Items() {
+function Area() {
   const [items, setItems] = useState([
     {
       id: 1,
-      name: "Cozy Apartment",
+      name: "Vijay Nagar",
       image: icon1,
-      description: "2BHK fully furnished apartment",
+      description: "Vijay Nagar have many 2BHK fully furnished apartment",
     },
     {
       id: 2,
-      name: "Shared Room",
+      name: "Palasia",
       image:icon2,
-      description: "Shared room in a central location",
+      description: "In Palasia we offer manyShared room in a central location",
     },
   ]);
 
@@ -74,12 +74,12 @@ function Items() {
   return (
     <div className="p-6 pt-[80px] mx-auto">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Category</h2>
+        <h2 className="text-2xl font-bold">Serviceable Areas</h2>
         <button
           onClick={() => setIsModalOpen(true)}
           className="bg-blue-500 text-white px-4 py-2 rounded"
         >
-          + Add Category
+          + Add New Location
         </button>
       </div>
 
@@ -200,7 +200,7 @@ function Items() {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded shadow-md w-[400px]">
-            <h3 className="text-lg font-semibold mb-4">Add Category</h3>
+            <h3 className="text-lg font-semibold mb-4"> Add New Location</h3>
             {["name", "description"].map((field) => (
               <input
                 key={field}
@@ -275,4 +275,4 @@ function Items() {
   );
 }
 
-export default Items;
+export default Area;

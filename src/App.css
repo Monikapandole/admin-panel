@@ -8,6 +8,12 @@
 }
 
 .content {
-  margin-left: 240px; /* Same as sidebar width */
-  width: calc(100% - 240px);
+  width: 100%; /* default full width on mobile */
+}
+
+/* Desktop and up (adjust 768px if you want different breakpoint) */
+@media (min-width: 768px) {
+  .content {
+    width: calc(100% - 240px);
+  }
 }
