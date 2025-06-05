@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { login } from '../redux/authSlice';
 import { useNavigate } from 'react-router-dom';
 import logo from "../assets/applogo.png"
+import { loginUserThunk } from '../Api/services/authService';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,24 +35,22 @@ export default function Login() {
     return true;
   };
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    if (!validate()) return;
+ const handleLogin = async (e) => {
+  e.preventDefault();
+  if (!validate()) return;
 
-    setLoading(true);
+  setError('');
+  const formData = new FormData();
+  formData.append('email', email);
+  formData.append('password', password);
 
-    // Simulate async login for demo; replace with real auth call
-    setTimeout(() => {
-      setLoading(false);
-      // For demo: only accept admin@rental.com / admin123
-      if (email.toLowerCase() === 'admin@rental.com' && password === 'admin123') {
-        dispatch(login({ email }));
-        navigate('/'); // Redirect to admin dashboard
-      } else {
-        setError('Invalid email or password');
-      }
-    }, 1000);
-  };
+  try {
+    await dispatch(loginUserThunk(formData)).unwrap();
+    navigate('/'); // or /dashboard
+  } catch (err) {
+    setError(err);
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
