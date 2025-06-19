@@ -1,20 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import icon1 from "../assets/react.svg";
 import icon2 from "../assets/react.svg";
+import { getAllCategory, addCategory } from "../Api/services/categoryService";
 function Items() {
   const [items, setItems] = useState([
-    {
-      id: 1,
-      name: "Cozy Apartment",
-      image: icon1,
-      description: "2BHK fully furnished apartment",
-    },
-    {
-      id: 2,
-      name: "Shared Room",
-      image:icon2,
-      description: "Shared room in a central location",
-    },
   ]);
 
   const [editingId, setEditingId] = useState(null);
@@ -50,27 +39,61 @@ function Items() {
     setItems(items.filter((item) => item.id !== id));
   };
 
-  const handleAddItem = () => {
+  const handleAddItem = async () => {
     const { name, image, description } = newItem;
     if (!name || !image || !description) return;
-
-    setItems([
-      ...items,
-      {
-        id: Date.now(),
-        name,
-        image,
+    try {
+      // Prepare image for API (convert preview URL to File if needed)
+      let imageFile = image;
+      if (typeof image === "string" && image.startsWith("blob:")) {
+        // If image is a blob URL, try to get the File from the input
+        const input = document.createElement('input');
+        input.type = 'file';
+        // Not possible to get the File from blob URL directly, so pass as empty string
+        imageFile = "";
+      }
+      await addCategory({
+        category_name: name,
         description,
-      },
-    ]);
-    setNewItem({
-      name: "",
-      image: "",
-      description: "",
-    });
-    setIsModalOpen(false);
+        category_image: imageFile,
+        status: "1",
+      });
+      setIsModalOpen(false);
+      setNewItem({ name: "", image: "", description: "" });
+      // Refresh categories
+      const data = await getAllCategory();
+      const categories = data?.data || data;
+      setItems(
+        categories.map((item, index) => ({
+          id: item.id || index,
+          name: item.category_name,
+          image: item.category_image,
+          description: item.description || "No description",
+        }))
+      );
+    } catch (error) {
+      alert("Failed to add category: " + (error?.response?.data?.message || error.message));
+    }
   };
 
+  // Fetch categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const data = await getAllCategory();
+      const categories = data?.data || data;
+
+      setItems(
+        categories.map((item, index) => ({
+          id: item.id || index,
+          name: item.category_name,
+          image: item.category_image,
+          description: item.description || "No description",
+        }))
+      );
+    };
+
+    fetchCategories();
+  }, []);
   return (
     <div className="p-6 pt-[80px] mx-auto">
       <div className="flex justify-between items-center mb-4">

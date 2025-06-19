@@ -6,6 +6,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import { addProperty, updateProperty } from "../../redux/propertySlice";
 import StepIndicator from "../../Utils/StepIndicator";
 import { TextField, Select, MenuItem, Button, Typography, Box, Grid, InputLabel, FormControl } from "@mui/material";
+import { fetchTenantPreferences } from '../../Api/services/userServices';
+import { getAllCategory } from '../../Api/services/categoryService';
+import { addPropertyAPI } from '../../Api/services/propertyService';
+import { fetchAllAreas } from '../../Api/services/areaService';
 
 const AddPropertyForm = () => {
     const dispatch = useDispatch();
@@ -42,10 +46,52 @@ const AddPropertyForm = () => {
     const [step, setStep] = useState(1);
     const [errors, setErrors] = useState({});
 
+    const [preferenceOptions, setPreferenceOptions] = useState([]);
+
+    const [propertyTypeOptions, setPropertyTypeOptions] = useState([]);
+
+    const [areaOptions, setAreaOptions] = useState([]);
+
     useEffect(() => {
         if (isEditMode && existingProperty) {
             setForm(existingProperty);
         }
+        // Fetch tenant preferences
+        fetchTenantPreferences()
+          .then((data) => {
+            if (data && Array.isArray(data.data) && data.data.length > 0) {
+              setPreferenceOptions(data.data);
+              // If current value is not in new options, set to first option
+              if (!data.data.some(opt => opt.name === form.preference)) {
+                setForm(prev => ({ ...prev, preference: data.data[0].name }));
+              }
+            }
+          })
+          .catch(() => {});
+        // Fetch property type options
+        getAllCategory()
+          .then((data) => {
+            if (data && Array.isArray(data.data) && data.data.length > 0) {
+              setPropertyTypeOptions(data.data);
+              // If current value is not in new options, set to first option
+              if (!data.data.some(opt => opt.category_name === form.type)) {
+                setForm(prev => ({ ...prev, type: data.data[0].category_name }));
+              }
+            }
+          })
+          .catch(() => {});
+        // Fetch areas for nearby dropdown
+        fetchAllAreas()
+          .then((data) => {
+            if (data && Array.isArray(data.data) && data.data.length > 0) {
+              setAreaOptions(data.data);
+              // If current value is not in new options, set to first option
+              if (!data.data.some(opt => opt.name === form.nearby)) {
+                setForm(prev => ({ ...prev, nearby: data.data[0].name }));
+              }
+            }
+          })
+          .catch(() => {});
     }, [isEditMode, existingProperty]);
 
     // Validation per step
@@ -117,7 +163,7 @@ const AddPropertyForm = () => {
             setPreviewUrl(null);
         }
     }, [form.bathroomImage]);
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         const allErrors = {};
         // Validate all steps on submit:
@@ -134,9 +180,54 @@ const AddPropertyForm = () => {
         if (isEditMode) {
             dispatch(updateProperty({ id, data: form }));
         } else {
-            dispatch(addProperty(form));
+            // Build FormData for API
+            const formData = new FormData();
+            formData.append('owner_name', form.owner);
+            formData.append('owner_contact', form.mobile);
+            // Find category_id from propertyTypeOptions
+            const category = propertyTypeOptions.find(opt => opt.category_name === form.type);
+            if (category) formData.append('category_id', category.id);
+            formData.append('purpose', form.purpose === 'For Rent' ? 'FOR_RENT' : 'FOR_SALE');
+            // area_id is not present in form, set as blank or add logic if available
+            const area = areaOptions.find(opt => opt.name === form.nearby);
+            if (area) {
+                formData.append('area_id', area.id);
+                formData.append('location', area.name);
+                formData.append('location_lat', area.lat || '');
+                formData.append('location_long', area.log || '');
+            } else {
+                formData.append('location', form.location);
+                formData.append('location_lat', '');
+                formData.append('location_long', '');
+            }
+            formData.append('address', form.address);
+            formData.append('number_of_rooms', form.rooms);
+            formData.append('square_footage', form.sqft);
+            if (form.bathroomImage) formData.append('bathroom_image', form.bathroomImage);
+            formData.append('floor', form.floor);
+            formData.append('furnished', form.furnished.toUpperCase().replace('-', '_'));
+            formData.append('amenities', form.amenities);
+            // Find tenant_id from preferenceOptions
+            const tenant = preferenceOptions.find(opt => opt.name === form.preference);
+            if (tenant) formData.append('tenant_id', tenant.id);
+            // API expects availability_date (use form.availableDate if Select Date, else today if Immediate)
+            let availabilityDate = '';
+            if (form.availability === 'Select Date') {
+                availabilityDate = form.availableDate;
+            } else if (form.availability === 'Immediate') {
+                const today = new Date();
+                availabilityDate = today.toISOString().slice(0, 10); // YYYY-MM-DD
+            }
+            formData.append('availability_date', availabilityDate);
+            formData.append('additional_detail', form.description);
+            formData.append('price', form.price);
+            try {
+                await addPropertyAPI(formData);
+                navigate('/properties');
+            } catch (error) {
+                setErrors({ submit: 'Failed to add property. Please try again.' });
+            }
         }
-        navigate("/properties");
     };
     console.log(form.bathroomImage instanceof File); // should be true
 
@@ -202,8 +293,10 @@ const AddPropertyForm = () => {
                                         onChange={handleChange}
                                         label="Property Type"
                                     >
-                                        {["Room", "1RK", "Flat (1BHK)", "Flat (2BHK)", "Flat (3BHK)", "House", "Shop", "PG/Hostel"].map((option) => (
-                                            <MenuItem key={option} value={option}>{option}</MenuItem>
+                                        {propertyTypeOptions.map((option) => (
+                                            <MenuItem key={option.id || option.category_name} value={option.category_name}>
+                                                {option.category_name}
+                                            </MenuItem>
                                         ))}
                                     </Select>
                                 </FormControl>
@@ -225,13 +318,21 @@ const AddPropertyForm = () => {
 
                             {/* Row 3 */}
                             <Box sx={{ display: "flex", gap: 2, mb: 2, mt: 4 }}>
-                                <TextField
-                                    label="Nearby Places"
-                                    name="nearby"
-                                    value={form.nearby}
-                                    onChange={handleChange}
-                                    fullWidth
-                                />
+                                <FormControl fullWidth>
+                                    <InputLabel>Nearby Areas</InputLabel>
+                                    <Select
+                                        label="Nearby Areas"
+                                        name="nearby"
+                                        value={form.nearby}
+                                        onChange={handleChange}
+                                    >
+                                        {areaOptions.map((option) => (
+                                            <MenuItem key={option.id || option.name} value={option.name}>
+                                                {option.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
                                 <TextField
                                     label="Address"
                                     name="address"
@@ -244,7 +345,7 @@ const AddPropertyForm = () => {
                             </Box>
 
                             {/* Row 4 - Full Width */}
-                            <Box sx={{ mb: 2, mt: 4 }}>
+                            {/* <Box sx={{ mb: 2, mt: 4 }}>
                                 <GooglePlacesAutocomplete
                                     apiKey="YOUR_API_KEY"
                                     selectProps={{
@@ -266,7 +367,7 @@ const AddPropertyForm = () => {
                                     }}
                                     debounce={400}
                                 />
-                            </Box>
+                            </Box> */}
                         </Box>
 
 
@@ -376,13 +477,11 @@ const AddPropertyForm = () => {
                                     onChange={handleChange}
                                     label="Tenant Preference"
                                 >
-                                    {["Boys", "Girls", "Family", "Independent", "Non-Independent"].map(
-                                        (option) => (
-                                            <MenuItem key={option} value={option}>
-                                                {option}
-                                            </MenuItem>
-                                        )
-                                    )}
+                                    {preferenceOptions.map((option) => (
+                                        <MenuItem key={option.id || option.name} value={option.name}>
+                                            {option.name}
+                                        </MenuItem>
+                                    ))}
                                 </Select>
                             </FormControl>
 

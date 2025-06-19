@@ -1,21 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import icon1 from "../assets/react.svg";
 import icon2 from "../assets/react.svg";
+import { fetchAllAreas, deleteArea, addArea } from "../Api/services/areaService";
+import { toast } from 'react-toastify';
+
 function Area() {
-  const [items, setItems] = useState([
-    {
-      id: 1,
-      name: "Vijay Nagar",
-      image: icon1,
-      description: "Vijay Nagar have many 2BHK fully furnished apartment",
-    },
-    {
-      id: 2,
-      name: "Palasia",
-      image:icon2,
-      description: "In Palasia we offer manyShared room in a central location",
-    },
-  ]);
+  const [items, setItems] = useState([]);
 
   const [editingId, setEditingId] = useState(null);
   const [editValues, setEditValues] = useState({
@@ -29,10 +19,26 @@ function Area() {
     name: "",
     image: "",
     description: "",
+    lat: "",
+    log: "",
   });
 
   const [previewImage, setPreviewImage] = useState("");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchAreas = async () => {
+      try {
+        const data = await fetchAllAreas();
+        // Adjust this if the API response structure is different
+        setItems(data.data || []);
+      } catch (error) {
+        // Optionally handle error
+        setItems([]);
+      }
+    };
+    fetchAreas();
+  }, []);
 
   const handleEdit = (item) => {
     setEditingId(item.id);
@@ -46,29 +52,38 @@ function Area() {
     setEditingId(null);
   };
 
-  const handleDelete = (id) => {
-    setItems(items.filter((item) => item.id !== id));
+  const handleDelete = async (id) => {
+    try {
+      await deleteArea(id);
+      setItems(items.filter((item) => item.id !== id));
+      toast.success('Area deleted successfully!');
+    } catch (error) {
+      console.log(error, "error");
+      toast.error('Failed to delete area.');
+    }
   };
 
-  const handleAddItem = () => {
-    const { name, image, description } = newItem;
-    if (!name || !image || !description) return;
-
-    setItems([
-      ...items,
-      {
-        id: Date.now(),
-        name,
-        image,
-        description,
-      },
-    ]);
-    setNewItem({
-      name: "",
-      image: "",
-      description: "",
-    });
-    setIsModalOpen(false);
+  const handleAddItem = async () => {
+    const { name, image, description, lat, log } = newItem;
+    if (!name || !image || !description || !lat || !log) return;
+    try {
+      // image is a preview URL, need to keep the file
+      const area_image = newItem.imageFile;
+      const res = await addArea({ name, description, lat, log, area_image });
+      const data = await fetchAllAreas();
+      setItems(data.data || []);
+      toast.success('Area added successfully!');
+      setNewItem({
+        name: "",
+        image: "",
+        description: "",
+        lat: "",
+        log: "",
+      });
+      setIsModalOpen(false);
+    } catch (error) {
+      toast.error('Failed to add area.');
+    }
   };
 
   return (
@@ -201,10 +216,10 @@ function Area() {
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded shadow-md w-[400px]">
             <h3 className="text-lg font-semibold mb-4"> Add New Location</h3>
-            {["name", "description"].map((field) => (
+            {['name', 'description', 'lat', 'log'].map((field) => (
               <input
                 key={field}
-                type={"text"}
+                type={field === 'lat' || field === 'log' ? 'number' : 'text'}
                 placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
                 value={newItem[field]}
                 onChange={(e) =>
@@ -220,7 +235,7 @@ function Area() {
                 const file = e.target.files[0];
                 if (file) {
                   const imageUrl = URL.createObjectURL(file);
-                  setNewItem({ ...newItem, image: imageUrl });
+                  setNewItem({ ...newItem, image: imageUrl, imageFile: file });
                 }
               }}
               className="border p-2 w-full mb-2"

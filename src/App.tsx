@@ -12,6 +12,8 @@ import Login from './pages/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 import Area from './pages/Area';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   const [showSidebar, setShowSidebar] = useState(false);
@@ -20,6 +22,7 @@ function App() {
 
   return (
     <Router>
+      <ToastContainer position="top-right" autoClose={3000} />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route

@@ -1,22 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { fetchAllUsers, deleteUser, addUser } from "../Api/services/userServices";
+import { toast } from 'react-toastify';
 
 function Users() {
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: "Alice",
-      email: "alice@example.com",
-      number: "123-456-7890",
-      address: "123 Main St, Springfield",
-    },
-    {
-      id: 2,
-      name: "Bob",
-      email: "bob@example.com",
-      number: "987-654-3210",
-      address: "456 Elm St, Metropolis",
-    },
-  ]);
+  const [users, setUsers] = useState([]);
 
   const [editingUserId, setEditingUserId] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -30,9 +17,24 @@ function Users() {
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
+    password: "",
+    country_code: "",
     number: "",
     address: "",
+    profile_image: null,
   });
+  const getUsers = async () => {
+    try {
+      const data = await fetchAllUsers();
+      setUsers(data?.data || []);
+    } catch (error) {
+      // Optionally handle error
+    }
+  };
+  useEffect(() => {
+ 
+    getUsers();
+  }, []);
 
   const handleEdit = (user) => {
     setEditingUserId(user.id);
@@ -61,22 +63,46 @@ function Users() {
     setEditingUserId(null);
   };
 
-  const handleDelete = (id) => {
-    setUsers(users.filter((u) => u.id !== id));
+  const handleDelete = async (id) => {
+    try {
+      console.log(id, "id");
+      const response = await deleteUser(id);
+      setUsers(users.filter((u) => u.user.id !== id));
+      toast.success(response?.message || 'User deleted successfully');
+      getUsers();
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Failed to delete user');
+    }
   };
 
-  const handleAddUser = () => {
+  const handleAddUser = async () => {
     if (
       !newUser.name ||
       !newUser.email ||
+      !newUser.password ||
+      !newUser.country_code ||
       !newUser.number ||
       !newUser.address
-    )
+    ) {
+      toast.error("Please fill all required fields");
       return;
-
-    setUsers([...users, { id: Date.now(), ...newUser }]);
-    setNewUser({ name: "", email: "", number: "", address: "" });
-    setIsModalOpen(false);
+    }
+    try {
+      await addUser({
+        name: newUser.name,
+        email: newUser.email,
+        password: newUser.password,
+        country_code: newUser.country_code,
+        phone_number: newUser.number,
+        profile_image: newUser.profile_image,
+      });
+      toast.success("User added successfully");
+      setNewUser({ name: "", email: "", password: "", country_code: "", number: "", address: "", profile_image: null });
+      setIsModalOpen(false);
+      getUsers();
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to add user");
+    }
   };
 
   return (
@@ -103,10 +129,11 @@ function Users() {
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => {
+            {users.map((userObj) => {
+              const user = userObj.user;
               const isEditing = editingUserId === user.id;
               return (
-                <tr key={user.id} className="border-t">
+                <tr key={user.user_id} className="border-t">
                   <td className="p-4">
                     {isEditing ? (
                       <input
@@ -146,7 +173,7 @@ function Users() {
                         className="border p-1 w-full"
                       />
                     ) : (
-                      user.number
+                      user.phone_number
                     )}
                   </td>
                   <td className="p-2">
@@ -160,7 +187,7 @@ function Users() {
                         className="border p-1 w-full"
                       />
                     ) : (
-                      user.address
+                      user.account_status
                     )}
                   </td>
                   <td className="p-2">
@@ -180,7 +207,7 @@ function Users() {
                       </button>
                     )}
                     <button
-                      onClick={() => handleDelete(user.id)}
+                      onClick={() => handleDelete(user.user_id)}
                       className="bg-red-500 text-white px-3 py-1 rounded"
                     >
                       Delete
@@ -217,6 +244,24 @@ function Users() {
               className="border p-2 w-full mb-3"
             />
             <input
+              type="password"
+              placeholder="Password"
+              value={newUser.password}
+              onChange={(e) =>
+                setNewUser((prev) => ({ ...prev, password: e.target.value }))
+              }
+              className="border p-2 w-full mb-3"
+            />
+            <input
+              type="text"
+              placeholder="Country Code"
+              value={newUser.country_code}
+              onChange={(e) =>
+                setNewUser((prev) => ({ ...prev, country_code: e.target.value }))
+              }
+              className="border p-2 w-full mb-3"
+            />
+            <input
               type="text"
               placeholder="Number"
               value={newUser.number}
@@ -231,6 +276,14 @@ function Users() {
               value={newUser.address}
               onChange={(e) =>
                 setNewUser((prev) => ({ ...prev, address: e.target.value }))
+              }
+              className="border p-2 w-full mb-3"
+            />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) =>
+                setNewUser((prev) => ({ ...prev, profile_image: e.target.files[0] }))
               }
               className="border p-2 w-full mb-4"
             />

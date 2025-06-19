@@ -3,11 +3,26 @@ import { FaHome, FaCog, FaUsers, FaBlackberry, FaBuilding, FaSignOutAlt, FaMapMa
 import { useDispatch } from 'react-redux';
 import { logout } from '../redux/authSlice'; // adjust path if different
 import './Sidebar.css';
+import { useEffect, useState } from 'react';
+import { fetchAdminProfile } from '../Api/services/authService';
 
 function Sidebar({ showSidebar, closeSidebar }) {
   const location = useLocation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    const getProfile = async () => {
+      try {
+        const data = await fetchAdminProfile();
+        setProfile(data);
+      } catch (error) {
+        console.error('Failed to fetch profile:', error);
+      }
+    };
+    getProfile();
+  }, []);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -35,10 +50,10 @@ function Sidebar({ showSidebar, closeSidebar }) {
         `}
       >
         <div className="p-4 border-b flex items-center gap-3">
-          <img src="https://i.pravatar.cc/50?img=3" alt="User" className="w-10 h-10 rounded-full" />
+          <img src={profile?.profile_image || "https://i.pravatar.cc/50?img=3"} alt="User" className="w-20 h-20 rounded-full" />
           <div>
-            <h4 className="font-semibold text-sm">David Grey. H</h4>
-            <span className="text-xs text-gray-500">Project Manager</span>
+            <h4 className="font-semibold text-sm">{profile?.name || 'Admin User'}</h4>
+            <span className="text-xs text-gray-500">{profile?.role || 'Project Manager'}</span>
           </div>
         </div>
         <ul className="menu p-4 space-y-3">

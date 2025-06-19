@@ -1,10 +1,42 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { setProperties } from '../redux/propertySlice';
+import { fetchAllProperties, deletePropertyAPI } from '../Api/services/propertyService';
 
 const PropertyListPage = () => {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const properties = useSelector((state) => state.property.properties);
+
+    useEffect(() => {
+        const fetchProperties = async () => {
+            try {
+                const data = await fetchAllProperties();
+                console.log(data, "data");
+                dispatch(setProperties(data.data || []));
+            } catch (error) {
+                // handle error, e.g., show toast
+                console.error('Failed to fetch properties', error);
+            }
+        };
+        fetchProperties();
+    }, [dispatch]);
+
+    const handleDelete = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this property?')) return;
+        try {
+            await deletePropertyAPI(id);
+            // Option 1: Refetch the list
+            const data = await fetchAllProperties();
+            dispatch(setProperties(data.data || []));
+            // Option 2: Remove from Redux store directly (uncomment if you prefer this)
+            // dispatch(setProperties(properties.filter((p) => p.id !== id)));
+        } catch (error) {
+            alert('Failed to delete property.');
+        }
+    };
+
     return (
         <div className="p-6 pt-[80px]">
             <div className="flex justify-between items-center mb-4">
@@ -31,9 +63,9 @@ const PropertyListPage = () => {
                     <tbody>
                         {properties.map((property) => (
                             <tr key={property.id} className="border-t">
-                                <td className="px-6 py-4">{property.owner}</td>
-                                <td className="px-6 py-4">{property.mobile}</td>
-                                <td className="px-6 py-4">{property.type}</td>
+                                <td className="px-6 py-4">{property.owner_name}</td>
+                                <td className="px-6 py-4">{property.owner_contact}</td>
+                                <td className="px-6 py-4">{property.category_name}</td>
                                 <td className="px-6 py-4">{property.address}</td>
                                 <td className="px-6 py-4">{property.price}</td>
                                 <td className="px-6 py-4 space-x-2">
@@ -43,7 +75,9 @@ const PropertyListPage = () => {
                                     >
                                         Edit
                                     </button>
-                                    <button className="bg-red-500 px-3 py-1 rounded text-white hover:bg-red-600">
+                                    <button className="bg-red-500 px-3 py-1 rounded text-white hover:bg-red-600"
+                                        onClick={() => handleDelete(property.id)}
+                                    >
                                         Delete
                                     </button>
                                     <button

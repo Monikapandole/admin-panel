@@ -3,6 +3,9 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import logo from "../assets/applogo.png"
 import { loginUserThunk } from '../Api/services/authService';
+import { login } from '../redux/authSlice';
+import { toast } from 'react-toastify';
+
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -43,12 +46,16 @@ export default function Login() {
   const formData = new FormData();
   formData.append('email', email);
   formData.append('password', password);
-
   try {
-    await dispatch(loginUserThunk(formData)).unwrap();
-    navigate('/'); // or /dashboard
+    const response = await dispatch(loginUserThunk(formData)).unwrap();
+      console.log('Login success:', response);
+    toast.success('Login Successfully!');
+    dispatch(login(response));
+    navigate('/');
   } catch (err) {
-    setError(err);
+    setError(err.message || 'Login failed');
+  } finally {
+    setLoading(false);
   }
 };
 

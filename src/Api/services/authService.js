@@ -2,12 +2,13 @@
 
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../axiosInstance';
+import { getToken } from '../../Api/services/categoryService';
 
 export const loginUserThunk = createAsyncThunk(
   'auth/loginUser',
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post('/login', formData, {
+      const response = await axiosInstance.post('/adminLogin', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -33,5 +34,19 @@ export const userLogout = async (userId, token) => {
     },
   });
 
+  return response.data;
+};
+
+// Fetch admin profile details
+export const fetchAdminProfile = async () => {
+  const adminToken = getToken();
+  const response = await axiosInstance.get('/adminProfile', {
+    headers: {
+      'Authorization': `Bearer ${adminToken}`,
+      'Cookie': `Admin_token=${adminToken}`
+
+    },
+    withCredentials: true,
+  });
   return response.data;
 };

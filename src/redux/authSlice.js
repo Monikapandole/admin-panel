@@ -16,6 +16,8 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       state.user = action.payload;
       localStorage.setItem('user', JSON.stringify(action.payload)); // persist
+        document.cookie = `Admin_token=${action.payload.JWT}; path=/;`;
+
     },
     logout: (state) => {
       state.isAuthenticated = false;
