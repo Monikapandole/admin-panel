@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import icon1 from "../assets/react.svg";
 import icon2 from "../assets/react.svg";
 import { getAllCategory, addCategory } from "../Api/services/categoryService";
+import { Loader } from "../Utils/Loader";
 function Items() {
   const [items, setItems] = useState([
   ]);
@@ -23,6 +24,8 @@ function Items() {
   const [previewImage, setPreviewImage] = useState("");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
+  const [loading, setLoading] = useState(false);
+
   const handleEdit = (item) => {
     setEditingId(item.id);
     setEditValues({ ...item });
@@ -43,6 +46,7 @@ function Items() {
     const { name, image, description } = newItem;
     if (!name || !image || !description) return;
     try {
+      setLoading(true);
       // Prepare image for API (convert preview URL to File if needed)
       let imageFile = image;
       if (typeof image === "string" && image.startsWith("blob:")) {
@@ -73,12 +77,15 @@ function Items() {
       );
     } catch (error) {
       alert("Failed to add category: " + (error?.response?.data?.message || error.message));
+    } finally {
+      setLoading(false);
     }
   };
 
   // Fetch categories on mount
   useEffect(() => {
     const fetchCategories = async () => {
+      setLoading(true);
       const data = await getAllCategory();
       const categories = data?.data || data;
 
@@ -90,6 +97,7 @@ function Items() {
           description: item.description || "No description",
         }))
       );
+      setLoading(false);
     };
 
     fetchCategories();
@@ -117,7 +125,13 @@ function Items() {
             </tr>
           </thead>
           <tbody>
-            {items.map((item) => {
+            {loading ? (
+              <tr>
+                <td colSpan={5}>
+                  <Loader />
+                </td>
+              </tr>
+            ) : items.map((item) => {
               const isEditing = editingId === item.id;
               return (
                 <tr key={item.id} className="border-t">

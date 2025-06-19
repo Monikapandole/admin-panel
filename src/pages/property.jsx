@@ -1,13 +1,15 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from 'react-redux';
 import { setProperties } from '../redux/propertySlice';
 import { fetchAllProperties, deletePropertyAPI } from '../Api/services/propertyService';
+import { Loader } from "../Utils/Loader";
 
 const PropertyListPage = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const properties = useSelector((state) => state.property.properties);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchProperties = async () => {
@@ -18,6 +20,8 @@ const PropertyListPage = () => {
             } catch (error) {
                 // handle error, e.g., show toast
                 console.error('Failed to fetch properties', error);
+            } finally {
+                setIsLoading(false);
             }
         };
         fetchProperties();
@@ -61,35 +65,41 @@ const PropertyListPage = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {properties.map((property) => (
-                            <tr key={property.id} className="border-t">
-                                <td className="px-6 py-4">{property.owner_name}</td>
-                                <td className="px-6 py-4">{property.owner_contact}</td>
-                                <td className="px-6 py-4">{property.category_name}</td>
-                                <td className="px-6 py-4">{property.address}</td>
-                                <td className="px-6 py-4">{property.price}</td>
-                                <td className="px-6 py-4 space-x-2">
-                                    <button className="bg-yellow-400 px-3 py-1 rounded text-white hover:bg-yellow-500"
-                                    onClick={() => navigate(`/edit-property/${property.id}`)}
-
-                                    >
-                                        Edit
-                                    </button>
-                                    <button className="bg-red-500 px-3 py-1 rounded text-white hover:bg-red-600"
-                                        onClick={() => handleDelete(property.id)}
-                                    >
-                                        Delete
-                                    </button>
-                                    <button
-                                        className="bg-green-500 px-3 py-1 rounded text-white hover:bg-green-600"
-                                        onClick={() => navigate(`/property/${property.id}`)}
-                                    >
-                                        View
-                                    </button>
-
+                        {isLoading ? (
+                            <tr>
+                                <td colSpan="6" className="py-16 text-center">
+                                     <Loader />
                                 </td>
                             </tr>
-                        ))}
+                        ) : (
+                            properties.map((property) => (
+                                <tr key={property.id} className="border-t">
+                                    <td className="px-6 py-4">{property.owner_name}</td>
+                                    <td className="px-6 py-4">{property.owner_contact}</td>
+                                    <td className="px-6 py-4">{property.category_name}</td>
+                                    <td className="px-6 py-4">{property.address}</td>
+                                    <td className="px-6 py-4">{property.price}</td>
+                                    <td className="px-6 py-4 space-x-2">
+                                        <button className="bg-yellow-400 px-3 py-1 rounded text-white hover:bg-yellow-500"
+                                        onClick={() => navigate(`/edit-property/${property.id}`)}
+                                        >
+                                            Edit
+                                        </button>
+                                        <button className="bg-red-500 px-3 py-1 rounded text-white hover:bg-red-600"
+                                            onClick={() => handleDelete(property.id)}
+                                        >
+                                            Delete
+                                        </button>
+                                        <button
+                                            className="bg-green-500 px-3 py-1 rounded text-white hover:bg-green-600"
+                                            onClick={() => navigate(`/property/${property.id}`)}
+                                        >
+                                            View
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>

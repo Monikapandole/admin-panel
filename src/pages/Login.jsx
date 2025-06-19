@@ -43,6 +43,7 @@ export default function Login() {
   if (!validate()) return;
 
   setError('');
+  setLoading(true);
   const formData = new FormData();
   formData.append('email', email);
   formData.append('password', password);

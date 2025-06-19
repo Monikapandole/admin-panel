@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { fetchAllUsers, deleteUser, addUser } from "../Api/services/userServices";
 import { toast } from 'react-toastify';
+import { Loader } from "../Utils/Loader";
 
 function Users() {
   const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [editingUserId, setEditingUserId] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -24,12 +26,14 @@ function Users() {
     profile_image: null,
   });
   const getUsers = async () => {
+    setLoading(true);
     try {
       const data = await fetchAllUsers();
       setUsers(data?.data || []);
     } catch (error) {
       // Optionally handle error
     }
+    setLoading(false);
   };
   useEffect(() => {
  
@@ -129,93 +133,105 @@ function Users() {
             </tr>
           </thead>
           <tbody>
-            {users.map((userObj) => {
-              const user = userObj.user;
-              const isEditing = editingUserId === user.id;
-              return (
-                <tr key={user.user_id} className="border-t">
-                  <td className="p-4">
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editForm.name}
-                        onChange={(e) =>
-                          setEditForm({ ...editForm, name: e.target.value })
-                        }
-                        className="border p-1 w-full"
-                      />
-                    ) : (
-                      user.name
-                    )}
-                  </td>
-                  <td className="p-2">
-                    {isEditing ? (
-                      <input
-                        type="email"
-                        value={editForm.email}
-                        onChange={(e) =>
-                          setEditForm({ ...editForm, email: e.target.value })
-                        }
-                        className="border p-1 w-full"
-                      />
-                    ) : (
-                      user.email
-                    )}
-                  </td>
-                  <td className="p-2">
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editForm.number}
-                        onChange={(e) =>
-                          setEditForm({ ...editForm, number: e.target.value })
-                        }
-                        className="border p-1 w-full"
-                      />
-                    ) : (
-                      user.phone_number
-                    )}
-                  </td>
-                  <td className="p-2">
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editForm.address}
-                        onChange={(e) =>
-                          setEditForm({ ...editForm, address: e.target.value })
-                        }
-                        className="border p-1 w-full"
-                      />
-                    ) : (
-                      user.account_status
-                    )}
-                  </td>
-                  <td className="p-2">
-                    {isEditing ? (
+            {loading ? (
+              <tr>
+                <td colSpan={5}>
+                  <Loader />
+                </td>
+              </tr>
+            ) : users.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="text-center py-4">No users found.</td>
+              </tr>
+            ) : (
+              users.map((userObj) => {
+                const user = userObj.user;
+                const isEditing = editingUserId === user.id;
+                return (
+                  <tr key={user.user_id} className="border-t">
+                    <td className="p-4">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editForm.name}
+                          onChange={(e) =>
+                            setEditForm({ ...editForm, name: e.target.value })
+                          }
+                          className="border p-1 w-full"
+                        />
+                      ) : (
+                        user.name
+                      )}
+                    </td>
+                    <td className="p-2">
+                      {isEditing ? (
+                        <input
+                          type="email"
+                          value={editForm.email}
+                          onChange={(e) =>
+                            setEditForm({ ...editForm, email: e.target.value })
+                          }
+                          className="border p-1 w-full"
+                        />
+                      ) : (
+                        user.email
+                      )}
+                    </td>
+                    <td className="p-2">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editForm.number}
+                          onChange={(e) =>
+                            setEditForm({ ...editForm, number: e.target.value })
+                          }
+                          className="border p-1 w-full"
+                        />
+                      ) : (
+                        user.phone_number
+                      )}
+                    </td>
+                    <td className="p-2">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editForm.address}
+                          onChange={(e) =>
+                            setEditForm({ ...editForm, address: e.target.value })
+                          }
+                          className="border p-1 w-full"
+                        />
+                      ) : (
+                        user.account_status
+                      )}
+                    </td>
+                    <td className="p-2">
+                      {isEditing ? (
+                        <button
+                          onClick={() => handleSave(user.id)}
+                          className="bg-green-500 text-white px-3 py-1 rounded mr-2"
+                        >
+                          Save
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleEdit(user)}
+                          className="bg-yellow-500 text-white px-3 py-1 rounded mr-2"
+                        >
+                          Edit
+                        </button>
+                      )}
                       <button
-                        onClick={() => handleSave(user.id)}
-                        className="bg-green-500 text-white px-3 py-1 rounded mr-2"
+                        onClick={() => handleDelete(user.user_id)}
+                        className="bg-red-500 text-white px-3 py-1 rounded"
                       >
-                        Save
+                        Delete
                       </button>
-                    ) : (
-                      <button
-                        onClick={() => handleEdit(user)}
-                        className="bg-yellow-500 text-white px-3 py-1 rounded mr-2"
-                      >
-                        Edit
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleDelete(user.user_id)}
-                      className="bg-red-500 text-white px-3 py-1 rounded"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>
