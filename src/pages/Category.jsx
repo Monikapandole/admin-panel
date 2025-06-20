@@ -83,25 +83,39 @@ function Items() {
   };
 
   // Fetch categories on mount
-  useEffect(() => {
-    const fetchCategories = async () => {
-      setLoading(true);
+useEffect(() => {
+  const fetchCategories = async () => {
+    setLoading(true);
+    try {
       const data = await getAllCategory();
+
+      // Check if data exists and is a non-empty array
       const categories = data?.data || data;
 
-      setItems(
-        categories.map((item, index) => ({
-          id: item.id || index,
-          name: item.category_name,
-          image: item.category_image,
-          description: item.description || "No description",
-        }))
-      );
+      if (Array.isArray(categories) && categories.length > 0) {
+        setItems(
+          categories.map((item, index) => ({
+            id: item.id || index,
+            name: item.category_name,
+            image: item.category_image,
+            description: item.description || "No description",
+          }))
+        );
+      } else {
+        // Empty or invalid data
+        setItems([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch categories:", error);
+      setItems([]);
+    } finally {
       setLoading(false);
-    };
+    }
+  };
 
-    fetchCategories();
-  }, []);
+  fetchCategories();
+}, []);
+
   return (
     <div className="p-6 pt-[80px] mx-auto">
       <div className="flex justify-between items-center mb-4">
