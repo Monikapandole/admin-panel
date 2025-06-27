@@ -64,4 +64,26 @@ export const deletePropertyAPI = async (id) => {
     console.error('Error deleting property:', error?.response?.data || error.message);
     throw error;
   }
+};
+
+export const editPropertyAPI = async (formData) => {
+  const token = getToken();
+  try {
+    const response = await axiosInstance.post(
+      '/editProperties',
+      formData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Cookie': `Admin_token=${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error editing property:', error?.response?.data || error.message);
+    throw error;
+  }
 }; 

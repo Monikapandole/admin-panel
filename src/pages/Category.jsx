@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import icon1 from "../assets/react.svg";
 import icon2 from "../assets/react.svg";
-import { getAllCategory, addCategory } from "../Api/services/categoryService";
+import { getAllCategory, addCategory, editCategory } from "../Api/services/categoryService";
 import { Loader } from "../Utils/Loader";
 function Items() {
   const [items, setItems] = useState([
@@ -31,11 +31,39 @@ function Items() {
     setEditValues({ ...item });
   };
 
-  const handleSave = (id) => {
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, ...editValues } : item))
-    );
-    setEditingId(null);
+  const handleSave = async (id) => {
+    const itemToEdit = items.find((item) => item.id === id);
+    try {
+      setLoading(true);
+      let imageFile = editValues.image;
+      // If the image is a blob URL, we can't upload it directly, so skip or handle as needed
+      if (typeof imageFile === "string" && imageFile.startsWith("blob:")) {
+        imageFile = ""; // Or handle file input for real file
+      }
+      await editCategory({
+        id,
+        category_name: editValues.name,
+        description: editValues.description,
+        status: "1",
+        category_image: imageFile,
+      });
+      setEditingId(null);
+      // Refresh categories
+      const data = await getAllCategory();
+      const categories = data?.data || data;
+      setItems(
+        categories.map((item, index) => ({
+          id: item.id || index,
+          name: item.category_name,
+          image: item.category_image,
+          description: item.description || "No description",
+        }))
+      );
+    } catch (error) {
+      alert("Failed to update category: " + (error?.response?.data?.message || error.message));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = (id) => {

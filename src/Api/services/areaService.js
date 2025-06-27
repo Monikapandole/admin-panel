@@ -70,4 +70,34 @@ export const addArea = async ({ name, description, lat, log, area_image }) => {
     console.error('Error adding area:', error?.response?.data || error.message);
     throw error;
   }
+};
+
+export const editArea = async ({ id, name, description, lat, log, area_image }) => {
+  const token = getToken();
+  try {
+    const formData = new FormData();
+    formData.append('id', id);
+    formData.append('name', name);
+    formData.append('description', description);
+    formData.append('lat', lat);
+    formData.append('log', log);
+    if (area_image) {
+      formData.append('area_image', area_image);
+    }
+    const response = await axiosInstance.post(
+      '/editArea',
+      formData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Cookie': `Admin_token=${token}`,
+        },
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error editing area:', error?.response?.data || error.message);
+    throw error;
+  }
 }; 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import icon1 from "../assets/react.svg";
 import icon2 from "../assets/react.svg";
-import { fetchAllAreas, deleteArea, addArea } from "../Api/services/areaService";
+import { fetchAllAreas, deleteArea, addArea, editArea } from "../Api/services/areaService";
 import { toast } from 'react-toastify';
 import { Loader } from "../Utils/Loader";
 
@@ -51,10 +51,23 @@ function Area() {
     setEditValues({ ...item });
   };
 
-  const handleSave = (id) => {
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, ...editValues } : item))
-    );
+  const handleSave = async (id) => {
+    try {
+      const { name, image, description, lat, log, imageFile } = editValues;
+      await editArea({
+        id,
+        name,
+        description,
+        lat: editValues.lat || '',
+        log: editValues.log || '',
+        area_image: editValues.imageFile || undefined,
+      });
+      const data = await fetchAllAreas();
+      setItems(data.data || []);
+      toast.success('Area updated successfully!');
+    } catch (error) {
+      toast.error('Failed to update area.');
+    }
     setEditingId(null);
   };
 

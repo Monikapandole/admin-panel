@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { fetchAllUsers, deleteUser, addUser } from "../Api/services/userServices";
+import { fetchAllUsers, deleteUser, addUser, editUser } from "../Api/services/userServices";
 import { toast } from 'react-toastify';
 import { Loader } from "../Utils/Loader";
 
@@ -41,30 +41,33 @@ function Users() {
   }, []);
 
   const handleEdit = (user) => {
-    setEditingUserId(user.id);
+    setEditingUserId(user.user_id);
     setEditForm({
       name: user.name,
       email: user.email,
-      number: user.number,
+      number: user.phone_number,
       address: user.address,
     });
   };
 
-  const handleSave = (id) => {
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.id === id
-          ? {
-              ...u,
-              name: editForm.name,
-              email: editForm.email,
-              number: editForm.number,
-              address: editForm.address,
-            }
-          : u
-      )
-    );
-    setEditingUserId(null);
+  const handleSave = async (user_id) => {
+    const userToEdit = users.find((u) => u.user.user_id === user_id)?.user;
+    try {
+      await editUser({
+        user_id: user_id,
+        name: editForm.name,
+        email: editForm.email,
+        country_code: userToEdit?.country_code || '',
+        phone_number: editForm.number,
+        account_status: userToEdit?.account_status || '',
+        profile_image: userToEdit?.profile_image || null,
+      });
+      toast.success('User updated successfully');
+      setEditingUserId(null);
+      getUsers();
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Failed to update user');
+    }
   };
 
   const handleDelete = async (id) => {
@@ -146,7 +149,7 @@ function Users() {
             ) : (
               users.map((userObj) => {
                 const user = userObj.user;
-                const isEditing = editingUserId === user.id;
+                const isEditing = editingUserId === user.user_id;
                 return (
                   <tr key={user.user_id} className="border-t">
                     <td className="p-4">
@@ -208,7 +211,7 @@ function Users() {
                     <td className="p-2">
                       {isEditing ? (
                         <button
-                          onClick={() => handleSave(user.id)}
+                          onClick={() => handleSave(user.user_id)}
                           className="bg-green-500 text-white px-3 py-1 rounded mr-2"
                         >
                           Save

@@ -8,7 +8,7 @@ import StepIndicator from "../../Utils/StepIndicator";
 import { TextField, Select, MenuItem, Button, Typography, Box, Grid, InputLabel, FormControl } from "@mui/material";
 import { fetchTenantPreferences } from '../../Api/services/userServices';
 import { getAllCategory } from '../../Api/services/categoryService';
-import { addPropertyAPI } from '../../Api/services/propertyService';
+import { addPropertyAPI, editPropertyAPI } from '../../Api/services/propertyService';
 import { fetchAllAreas } from '../../Api/services/areaService';
 
 const AddPropertyForm = () => {
@@ -178,7 +178,55 @@ const AddPropertyForm = () => {
         }
 
         if (isEditMode) {
-            dispatch(updateProperty({ id, data: form }));
+            // Build FormData for API
+            const formData = new FormData();
+            formData.append('id', id);
+            formData.append('owner_name', form.owner);
+            formData.append('owner_contact', form.mobile);
+            // Find category_id from propertyTypeOptions
+            const category = propertyTypeOptions.find(opt => opt.category_name === form.type);
+            if (category) formData.append('category_id', category.id);
+            formData.append('purpose', form.purpose === 'For Rent' ? 'FOR_RENT' : 'FOR_SALE');
+            // area_id is not present in form, set as blank or add logic if available
+            const area = areaOptions.find(opt => opt.name === form.nearby);
+            if (area) {
+                formData.append('area_id', area.id);
+                formData.append('location', area.name);
+                formData.append('location_lat', area.lat || '');
+                formData.append('location_long', area.log || '');
+            } else {
+                formData.append('location', form.location);
+                formData.append('location_lat', '');
+                formData.append('location_long', '');
+            }
+            formData.append('address', form.address);
+            formData.append('number_of_rooms', form.rooms);
+            formData.append('square_footage', form.sqft);
+            if (form.bathroomImage) formData.append('bathroom_image', form.bathroomImage);
+            formData.append('floor', form.floor);
+            formData.append('furnished', form.furnished.toUpperCase().replace('-', '_'));
+            formData.append('amenities', form.amenities);
+            // Find tenant_id from preferenceOptions
+            const tenant = preferenceOptions.find(opt => opt.name === form.preference);
+            if (tenant) formData.append('tenant_id', tenant.id);
+            // API expects availability_date (use form.availableDate if Select Date, else today if Immediate)
+            let availabilityDate = '';
+            if (form.availability === 'Select Date') {
+                availabilityDate = form.availableDate;
+            } else if (form.availability === 'Immediate') {
+                const today = new Date();
+                availabilityDate = today.toISOString().slice(0, 10); // YYYY-MM-DD
+            }
+            formData.append('availability_date', availabilityDate);
+            formData.append('additional_detail', form.description);
+            formData.append('price', form.price);
+            formData.append('status', 'active');
+            try {
+                await editPropertyAPI(formData);
+                navigate('/properties');
+            } catch (error) {
+                setErrors({ submit: 'Failed to update property. Please try again.' });
+            }
         } else {
             // Build FormData for API
             const formData = new FormData();

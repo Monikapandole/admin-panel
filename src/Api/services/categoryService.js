@@ -57,4 +57,28 @@ export const getUserById = async (userId) => {
   return response.data;
 };
 
+export const editCategory = async ({ id, category_name, description, status = "1", category_image }) => {
+  try {
+    const token = getToken();
+    const formData = new FormData();
+    formData.append('id', id);
+    formData.append('category_name', category_name);
+    formData.append('description', description);
+    formData.append('status', status);
+    formData.append('category_image', category_image || "");
+
+    const response = await axiosInstance.post('/editCategory', formData, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Cookie': `Admin_token=${token}`,
+      },
+      withCredentials: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error editing category:', error?.response?.data || error.message);
+    throw error;
+  }
+};
+
 

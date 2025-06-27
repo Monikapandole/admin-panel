@@ -93,3 +93,34 @@ export const fetchTenantPreferences = async () => {
     throw error;
   }
 };
+
+export const editUser = async ({ user_id, name, email, country_code, phone_number, account_status, profile_image }) => {
+  const token = getToken();
+  try {
+    const formData = new FormData();
+    formData.append('user_id', user_id);
+    formData.append('name', name);
+    formData.append('email', email);
+    formData.append('country_code', country_code);
+    formData.append('phone_number', phone_number);
+    formData.append('account_status', account_status);
+    if (profile_image) {
+      formData.append('profile_image', profile_image);
+    }
+    const response = await axiosInstance.post(
+      '/editUser',
+      formData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Cookie': `Admin_token=${token}`,
+        },
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error editing user:', error?.response?.data || error.message);
+    throw error;
+  }
+};
