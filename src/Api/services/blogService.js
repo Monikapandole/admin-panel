@@ -1,11 +1,11 @@
 import axiosInstance from '../axiosInstance';
 import { getToken } from './categoryService';
 
-export const fetchAllProperties = async () => {
+export const fetchAllBlogs = async () => {
   const token = getToken();
   try {
     const response = await axiosInstance.get(
-      '/viewProperties',
+      '/viewBlog',
       {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -16,40 +16,18 @@ export const fetchAllProperties = async () => {
     );
     return response.data;
   } catch (error) {
-    console.error('Error fetching properties:', error?.response?.data || error.message);
+    console.error('Error fetching blogs:', error?.response?.data || error.message);
     throw error;
   }
 };
 
-export const addPropertyAPI = async (formData) => {
-  const token = getToken();
-  try {
-    const response = await axiosInstance.post(
-      '/addProperties',
-      formData,
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Cookie': `Admin_token=${token}`,
-          'Content-Type': 'multipart/form-data',
-        },
-        withCredentials: true,
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error adding property:', error?.response?.data || error.message);
-    throw error;
-  }
-};
-
-export const deletePropertyAPI = async (id) => {
+export const deleteBlog = async (id) => {
   const token = getToken();
   try {
     const formData = new FormData();
     formData.append('id', id);
     const response = await axiosInstance.post(
-      '/deleteProperties',
+      '/deleteBlog',
       formData,
       {
         headers: {
@@ -61,56 +39,61 @@ export const deletePropertyAPI = async (id) => {
     );
     return response.data;
   } catch (error) {
-    console.error('Error deleting property:', error?.response?.data || error.message);
+    console.error('Error deleting blog:', error?.response?.data || error.message);
     throw error;
   }
 };
 
-export const editPropertyAPI = async (formData) => {
+export const addBlog = async ({ title, content, featured_image }) => {
   const token = getToken();
   try {
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('content', content);
+    formData.append('blog_image', featured_image || "");
+
     const response = await axiosInstance.post(
-      '/editProperties',
+      '/addBlog',
       formData,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Cookie': `Admin_token=${token}`,
-          'Content-Type': 'multipart/form-data',
         },
         withCredentials: true,
       }
     );
     return response.data;
   } catch (error) {
-    console.error('Error editing property:', error?.response?.data || error.message);
+    console.error('Error adding blog:', error?.response?.data || error.message);
     throw error;
   }
 };
 
-export const uploadPropertyImagesAPI = async (propertyId, images) => {
+export const editBlog = async ({ id, title, content, featured_image }) => {
   const token = getToken();
-  const formData = new FormData();
-  formData.append('property_id', propertyId);
-  images.forEach((img) => {
-    formData.append('property_images', img);
-  });
   try {
+    const formData = new FormData();
+    formData.append('id', id);
+    formData.append('title', title);
+    formData.append('content', content);
+    if (featured_image) {
+      formData.append('blog_image', featured_image);
+    }
     const response = await axiosInstance.post(
-      '/uploadPropertyImages',
+      '/editBlog',
       formData,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Cookie': `Admin_token=${token}`,
-          'Content-Type': 'multipart/form-data',
         },
         withCredentials: true,
       }
     );
     return response.data;
   } catch (error) {
-    console.error('Error uploading property images:', error?.response?.data || error.message);
+    console.error('Error editing blog:', error?.response?.data || error.message);
     throw error;
   }
 }; 

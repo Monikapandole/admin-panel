@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FaHome, FaCog, FaUsers, FaBlackberry, FaBuilding, FaSignOutAlt, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaHome, FaCog, FaUsers, FaBlackberry, FaBuilding, FaSignOutAlt, FaMapMarkerAlt, FaBlog, FaFileContract } from 'react-icons/fa';
 import { useDispatch } from 'react-redux';
 import { logout } from '../redux/authSlice'; // adjust path if different
 import './Sidebar.css';
@@ -63,20 +63,35 @@ function Sidebar({ showSidebar, closeSidebar }) {
           <li className={location.pathname === '/category' ? 'active' : ''}>
             <Link to="/category" onClick={closeSidebar}><FaBlackberry /> Category</Link>
           </li>
+          <li className={location.pathname === '/properties' ? 'active' : ''}>
+            <Link to="/properties" onClick={closeSidebar}><FaBuilding /> Properties</Link>
+          </li>
           <li className={location.pathname === '/areas' ? 'active' : ''}>
             <Link to="/areas" onClick={closeSidebar}>
               <FaMapMarkerAlt /> Areas
             </Link>
           </li>
 
+          <li className={location.pathname === '/tenants' ? 'active' : ''}>
+            <Link to="/tenants" onClick={closeSidebar}><FaUsers /> Tenants</Link>
+          </li>
+
+          <li className={location.pathname === '/blogs' ? 'active' : ''}>
+            <Link to="/blogs" onClick={closeSidebar}><FaBlog /> Blogs</Link>
+          </li>
+
+
+
           <li className={location.pathname === '/users' ? 'active' : ''}>
             <Link to="/users" onClick={closeSidebar}><FaUsers /> Users</Link>
           </li>
-          <li className={location.pathname === '/properties' ? 'active' : ''}>
-            <Link to="/properties" onClick={closeSidebar}><FaBuilding /> Properties</Link>
+
+          <li className={location.pathname === '/policy' ? 'active' : ''}>
+            <Link to="/policy" onClick={closeSidebar}><FaFileContract /> Policy</Link>
           </li>
-          <li className={location.pathname === '/settings' ? 'active' : ''}>
-            <Link to="/settings" onClick={closeSidebar}><FaCog /> Settings</Link>
+
+          <li className={location.pathname === '/terms' ? 'active' : ''}>
+            <Link to="/terms" onClick={closeSidebar}><FaFileContract /> Terms</Link>
           </li>
           <li className="text-red-600 hover:text-red-800 cursor-pointer  p-4">
             <div onClick={handleLogout} className="flex items-center gap-2">

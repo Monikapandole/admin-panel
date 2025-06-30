@@ -6,9 +6,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import { addProperty, updateProperty } from "../../redux/propertySlice";
 import StepIndicator from "../../Utils/StepIndicator";
 import { TextField, Select, MenuItem, Button, Typography, Box, Grid, InputLabel, FormControl } from "@mui/material";
-import { fetchTenantPreferences } from '../../Api/services/userServices';
+import { fetchTenants } from '../../Api/services/userServices';
 import { getAllCategory } from '../../Api/services/categoryService';
-import { addPropertyAPI, editPropertyAPI } from '../../Api/services/propertyService';
+import { addPropertyAPI, editPropertyAPI, uploadPropertyImagesAPI } from '../../Api/services/propertyService';
 import { fetchAllAreas } from '../../Api/services/areaService';
 
 const AddPropertyForm = () => {
@@ -52,19 +52,15 @@ const AddPropertyForm = () => {
 
     const [areaOptions, setAreaOptions] = useState([]);
 
+    const [dropdownsLoaded, setDropdownsLoaded] = useState(false);
+
     useEffect(() => {
-        if (isEditMode && existingProperty) {
-            setForm(existingProperty);
-        }
+        let loaded = false;
         // Fetch tenant preferences
-        fetchTenantPreferences()
+        fetchTenants()
           .then((data) => {
             if (data && Array.isArray(data.data) && data.data.length > 0) {
               setPreferenceOptions(data.data);
-              // If current value is not in new options, set to first option
-              if (!data.data.some(opt => opt.name === form.preference)) {
-                setForm(prev => ({ ...prev, preference: data.data[0].name }));
-              }
             }
           })
           .catch(() => {});
@@ -73,10 +69,6 @@ const AddPropertyForm = () => {
           .then((data) => {
             if (data && Array.isArray(data.data) && data.data.length > 0) {
               setPropertyTypeOptions(data.data);
-              // If current value is not in new options, set to first option
-              if (!data.data.some(opt => opt.category_name === form.type)) {
-                setForm(prev => ({ ...prev, type: data.data[0].category_name }));
-              }
             }
           })
           .catch(() => {});
@@ -85,14 +77,43 @@ const AddPropertyForm = () => {
           .then((data) => {
             if (data && Array.isArray(data.data) && data.data.length > 0) {
               setAreaOptions(data.data);
-              // If current value is not in new options, set to first option
-              if (!data.data.some(opt => opt.name === form.nearby)) {
-                setForm(prev => ({ ...prev, nearby: data.data[0].name }));
-              }
             }
           })
           .catch(() => {});
-    }, [isEditMode, existingProperty]);
+        // Set dropdownsLoaded after all fetches (naive, but works for now)
+        setTimeout(() => setDropdownsLoaded(true), 500); // Wait for dropdowns to load
+    }, []);
+
+    // Set form values when editing and all dropdowns/options are loaded
+    useEffect(() => {
+        if (isEditMode && existingProperty && dropdownsLoaded) {
+            // Map existingProperty fields to form fields
+            setForm(prev => ({
+                ...prev,
+                mobile: existingProperty.owner_contact || existingProperty.mobile || '',
+                owner: existingProperty.owner_name || existingProperty.owner || '',
+                type: existingProperty.type || existingProperty.category_name || prev.type,
+                purpose: existingProperty.purpose === 'FOR_RENT' ? 'For Rent' : (existingProperty.purpose === 'FOR_SALE' ? 'For Sale' : prev.purpose),
+                location: existingProperty.location || '',
+                nearby: existingProperty.nearby || existingProperty.location || '',
+                address: existingProperty.address || '',
+                rooms: existingProperty.number_of_rooms || existingProperty.rooms || '',
+                sqft: existingProperty.square_footage || existingProperty.sqft || '',
+                bathroomImage: null, // Don't prefill file input
+                floor: existingProperty.floor || '',
+                furnished: (existingProperty.furnished || '').replace('_', '-').replace('NONE', 'None').replace('SEMI-FURNISHED', 'Semi-Furnished').replace('FULLY FURNISHED', 'Fully Furnished') || prev.furnished,
+                amenities: existingProperty.amenities || '',
+                preference: existingProperty.preference || existingProperty.tenant_preference || existingProperty.tenant_name || prev.preference,
+                availability: existingProperty.availability_date ? 'Select Date' : 'Immediate',
+                availableDate: existingProperty.availability_date
+                  ? new Date(existingProperty.availability_date).toISOString().slice(0, 10)
+                  : '',
+                description: existingProperty.additional_detail || existingProperty.description || '',
+                price: existingProperty.price || '',
+                photos: [], // Don't prefill file input
+            }));
+        }
+    }, [isEditMode, existingProperty, dropdownsLoaded]);
 
     // Validation per step
     const validateStep = () => {
@@ -223,6 +244,15 @@ const AddPropertyForm = () => {
             formData.append('status', 'active');
             try {
                 await editPropertyAPI(formData);
+                // Upload images if any
+                if (form.photos && form.photos.length > 0) {
+                    try {
+                        await uploadPropertyImagesAPI(id, form.photos);
+                    } catch (imgErr) {
+                        setErrors({ submit: 'Property updated, but failed to upload images.' });
+                        return;
+                    }
+                }
                 navigate('/properties');
             } catch (error) {
                 setErrors({ submit: 'Failed to update property. Please try again.' });
@@ -270,7 +300,16 @@ const AddPropertyForm = () => {
             formData.append('additional_detail', form.description);
             formData.append('price', form.price);
             try {
-                await addPropertyAPI(formData);
+                const res = await addPropertyAPI(formData);
+                // Upload images if any
+                if (res && res.data && res.data.id && form.photos && form.photos.length > 0) {
+                    try {
+                        await uploadPropertyImagesAPI(res.data.id, form.photos);
+                    } catch (imgErr) {
+                        setErrors({ submit: 'Property added, but failed to upload images.' });
+                        return;
+                    }
+                }
                 navigate('/properties');
             } catch (error) {
                 setErrors({ submit: 'Failed to add property. Please try again.' });

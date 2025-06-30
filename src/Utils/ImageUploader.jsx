@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Upload } from "lucide-react"; // Optional: for upload icon
 
-function ImageUploader({ inputClass, errorClass, errors, handleChange, existingPhotos }) {
+function ImageUploader({ inputClass, errorClass, errors = {}, handleChange, existingPhotos }) {
     const [previews, setPreviews] = useState([]);
   
     useEffect(() => {

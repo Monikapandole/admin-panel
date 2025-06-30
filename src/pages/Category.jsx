@@ -36,7 +36,6 @@ function Items() {
     try {
       setLoading(true);
       let imageFile = editValues.image;
-      // If the image is a blob URL, we can't upload it directly, so skip or handle as needed
       if (typeof imageFile === "string" && imageFile.startsWith("blob:")) {
         imageFile = ""; // Or handle file input for real file
       }
@@ -48,7 +47,6 @@ function Items() {
         category_image: imageFile,
       });
       setEditingId(null);
-      // Refresh categories
       const data = await getAllCategory();
       const categories = data?.data || data;
       setItems(
@@ -75,13 +73,10 @@ function Items() {
     if (!name || !image || !description) return;
     try {
       setLoading(true);
-      // Prepare image for API (convert preview URL to File if needed)
       let imageFile = image;
       if (typeof image === "string" && image.startsWith("blob:")) {
-        // If image is a blob URL, try to get the File from the input
         const input = document.createElement('input');
         input.type = 'file';
-        // Not possible to get the File from blob URL directly, so pass as empty string
         imageFile = "";
       }
       await addCategory({
@@ -92,7 +87,6 @@ function Items() {
       });
       setIsModalOpen(false);
       setNewItem({ name: "", image: "", description: "" });
-      // Refresh categories
       const data = await getAllCategory();
       const categories = data?.data || data;
       setItems(
@@ -110,16 +104,12 @@ function Items() {
     }
   };
 
-  // Fetch categories on mount
 useEffect(() => {
   const fetchCategories = async () => {
     setLoading(true);
     try {
       const data = await getAllCategory();
-
-      // Check if data exists and is a non-empty array
       const categories = data?.data || data;
-
       if (Array.isArray(categories) && categories.length > 0) {
         setItems(
           categories.map((item, index) => ({
@@ -130,7 +120,6 @@ useEffect(() => {
           }))
         );
       } else {
-        // Empty or invalid data
         setItems([]);
       }
     } catch (error) {
@@ -140,7 +129,6 @@ useEffect(() => {
       setLoading(false);
     }
   };
-
   fetchCategories();
 }, []);
 

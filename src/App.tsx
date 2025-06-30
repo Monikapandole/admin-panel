@@ -12,6 +12,10 @@ import Login from './pages/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 import Area from './pages/Area';
+import Tenant from './pages/Tenant';
+import Blog from './pages/Blog';
+import Policy from './pages/Policy';
+import Terms from './pages/Terms';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -60,6 +64,10 @@ function App() {
                     <Route path="/" element={<Home />} />
                     <Route path="/category" element={<Category />} />
                     <Route path="/areas" element={<Area />} />
+                    <Route path="/tenants" element={<Tenant />} />
+                    <Route path="/blogs" element={<Blog />} />
+                    <Route path="/policy" element={<Policy />} />
+                    <Route path="/terms" element={<Terms />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/users" element={<Users />} />
                     <Route path="/properties" element={<PropertyListPage />} />

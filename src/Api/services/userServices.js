@@ -74,7 +74,7 @@ export const addUser = async ({ name, email, password, country_code, phone_numbe
   }
 };
 
-export const fetchTenantPreferences = async () => {
+export const fetchTenants = async () => {
   const token = getToken();
   try {
     const response = await axiosInstance.get(
@@ -89,7 +89,78 @@ export const fetchTenantPreferences = async () => {
     );
     return response.data;
   } catch (error) {
-    console.error('Error fetching tenant preferences:', error?.response?.data || error.message);
+    console.error('Error fetching tenants:', error?.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const addTenant = async ({ name }) => {
+  const token = getToken();
+  try {
+    const formData = new FormData();
+    formData.append('name', name);
+    const response = await axiosInstance.post(
+      '/addTenant',
+      formData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Cookie': `Admin_token=${token}`,
+        },
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error adding tenant:', error?.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const editTenant = async ({ id, name, status }) => {
+  const token = getToken();
+  try {
+    const formData = new FormData();
+    formData.append('id', id);
+    formData.append('name', name);
+    formData.append('status', status);
+    const response = await axiosInstance.post(
+      '/editTenant',
+      formData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Cookie': `Admin_token=${token}`,
+        },
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error editing tenant:', error?.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const deleteTenant = async (id) => {
+  const token = getToken();
+  try {
+    const formData = new FormData();
+    formData.append('id', id);
+    const response = await axiosInstance.post(
+      '/deleteTenant',
+      formData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Cookie': `Admin_token=${token}`,
+        },
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting tenant:', error?.response?.data || error.message);
     throw error;
   }
 };
