@@ -81,4 +81,24 @@ export const editCategory = async ({ id, category_name, description, status = "1
   }
 };
 
+export const deleteCategory = async (id) => {
+  try {
+    const token = getToken();
+    const formData = new FormData();
+    formData.append('id', id);
+
+    const response = await axiosInstance.post('/deleteCategory', formData, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Cookie': `Admin_token=${token}`,
+      },
+      withCredentials: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting category:', error?.response?.data || error.message);
+    throw error;
+  }
+};
+
 

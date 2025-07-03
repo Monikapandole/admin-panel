@@ -8,7 +8,7 @@ import StepIndicator from "../../Utils/StepIndicator";
 import { TextField, Select, MenuItem, Button, Typography, Box, Grid, InputLabel, FormControl } from "@mui/material";
 import { fetchTenants } from '../../Api/services/userServices';
 import { getAllCategory } from '../../Api/services/categoryService';
-import { addPropertyAPI, editPropertyAPI, uploadPropertyImagesAPI } from '../../Api/services/propertyService';
+import { addPropertyAPI, editPropertyAPI, uploadPropertyImagesAPI, editPropertyImagesAPI,  } from '../../Api/services/propertyService';
 import { fetchAllAreas } from '../../Api/services/areaService';
 
 const AddPropertyForm = () => {
@@ -53,6 +53,10 @@ const AddPropertyForm = () => {
     const [areaOptions, setAreaOptions] = useState([]);
 
     const [dropdownsLoaded, setDropdownsLoaded] = useState(false);
+
+    const [existingImages, setExistingImages] = useState([]);
+
+    const [removedImageIds, setRemovedImageIds] = useState([]);
 
     useEffect(() => {
         let loaded = false;
@@ -112,6 +116,7 @@ const AddPropertyForm = () => {
                 price: existingProperty.price || '',
                 photos: [], // Don't prefill file input
             }));
+            setExistingImages(existingProperty.property_images || []);
         }
     }, [isEditMode, existingProperty, dropdownsLoaded]);
 
@@ -242,14 +247,24 @@ const AddPropertyForm = () => {
             formData.append('additional_detail', form.description);
             formData.append('price', form.price);
             formData.append('status', 'active');
+
+            // Add new images
+            form.photos.forEach((img) => {
+                formData.append('property_images', img);
+            });
+            // Add existing image IDs to keep
+            existingImages.forEach((img) => {
+                formData.append('existing_image_ids', img.id); // or whatever the backend expects
+            });
+
             try {
                 await editPropertyAPI(formData);
-                // Upload images if any
+                // Upload images if any (use editPropertyImagesAPI for edit mode)
                 if (form.photos && form.photos.length > 0) {
                     try {
-                        await uploadPropertyImagesAPI(id, form.photos);
+                        await editPropertyImagesAPI(id, formData);
                     } catch (imgErr) {
-                        setErrors({ submit: 'Property updated, but failed to upload images.' });
+                        setErrors({ submit: 'Property updated, but failed to update images.' });
                         return;
                     }
                 }
@@ -320,6 +335,19 @@ const AddPropertyForm = () => {
 
     const inputClass = `shadow h-[48px] text-[14px] appearance-none border-[1px] border-b-4 rounded w-full py-2 px-3 text-gray-700 focus:outline-none`;
     const errorClass = "text-red-500 text-sm";
+
+    // Remove image handler for ImageUploader
+    const handleRemoveImage = (index, type) => {
+        if (type === 'new') {
+            setForm(prev => ({
+                ...prev,
+                photos: prev.photos.filter((_, i) => i !== (index - existingImages.length))
+            }));
+        } else if (type === 'existing') {
+            setRemovedImageIds(prev => [...prev, existingImages[index].id]);
+            setExistingImages(prev => prev.filter((_, i) => i !== index));
+        }
+    };
 
     return (
         <div className="p-6 pt-[5rem] max-w-6xl mx-auto justify-center flex flex-col" >
@@ -639,6 +667,9 @@ const AddPropertyForm = () => {
                                 inputClass={inputClass}
                                 errors={errors}
                                 handleChange={handleChange}
+                                selectedImages={form.photos}
+                                existingImages={existingImages}
+                                onRemoveImage={handleRemoveImage}
                             />
                         </Box>
 
@@ -694,4 +725,5 @@ const AddPropertyForm = () => {
 };
 
 export default AddPropertyForm;
+
 

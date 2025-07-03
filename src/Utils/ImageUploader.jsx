@@ -1,15 +1,34 @@
 import { useState, useEffect } from "react";
-import { Upload } from "lucide-react"; // Optional: for upload icon
+import { Upload, X } from "lucide-react"; // Add X for cross icon
 
-function ImageUploader({ inputClass, errorClass, errors = {}, handleChange, existingPhotos }) {
+function ImageUploader({ inputClass, errorClass, errors = {}, handleChange, selectedImages = [], existingImages = [], onRemoveImage }) {
     const [previews, setPreviews] = useState([]);
+    const [previewTypes, setPreviewTypes] = useState([]); // 'existing' or 'new'
   
     useEffect(() => {
-      if (existingPhotos) {
-        const urls = existingPhotos.map((file) => URL.createObjectURL(file));
-        setPreviews(urls);
-      }
-    }, [existingPhotos]);
+        let newPreviews = [];
+        let newTypes = [];
+        if (existingImages && existingImages.length > 0) {
+            existingImages.forEach((img) => {
+                newPreviews.push(img.url || img.image_url || img);
+                newTypes.push('existing');
+            });
+        }
+        if (selectedImages && selectedImages.length > 0) {
+            selectedImages.forEach((file) => {
+                newPreviews.push(URL.createObjectURL(file));
+                newTypes.push('new');
+            });
+        }
+        setPreviews(newPreviews);
+        setPreviewTypes(newTypes);
+        // Cleanup for new uploads
+        return () => {
+            if (selectedImages && selectedImages.length > 0) {
+                selectedImages.forEach((file) => URL.revokeObjectURL(URL.createObjectURL(file)));
+            }
+        };
+    }, [selectedImages, existingImages]);
   
     const validateFiles = (files) => {
       const validFiles = [];
@@ -29,13 +48,6 @@ function ImageUploader({ inputClass, errorClass, errors = {}, handleChange, exis
     const handleFileChange = (e) => {
       const files = Array.from(e.target.files);
       const validFiles = validateFiles(files);
-  
-      // Create preview URLs for valid files
-      const previewURLs = validFiles.map((file) => URL.createObjectURL(file));
-  
-      // Combine and limit
-      const newPreviews = [...previews, ...previewURLs].slice(0, 8);
-      setPreviews(newPreviews);
   
       // Pass only the valid files to parent
       handleChange(e, validFiles);
@@ -61,9 +73,19 @@ function ImageUploader({ inputClass, errorClass, errors = {}, handleChange, exis
               {previews.map((src, i) => (
                 <div
                   key={i}
-                  className="w-full aspect-[9/16] bg-gray-200 flex items-center justify-center border"
+                  className="relative w-full aspect-[9/16] bg-gray-200 flex items-center justify-center border"
                 >
                   <img src={src} alt={`Preview ${i + 1}`} className="w-full h-full object-cover" />
+                  {onRemoveImage && (
+                    <button
+                      type="button"
+                      className="absolute top-1 right-1 bg-white bg-opacity-80 rounded-full p-1 hover:bg-red-200"
+                      onClick={() => onRemoveImage(i, previewTypes[i])}
+                      tabIndex={-1}
+                    >
+                      <X className="w-4 h-4 text-red-600" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>

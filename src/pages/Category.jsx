@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import icon1 from "../assets/react.svg";
 import icon2 from "../assets/react.svg";
-import { getAllCategory, addCategory, editCategory } from "../Api/services/categoryService";
+import { getAllCategory, addCategory, editCategory, deleteCategory } from "../Api/services/categoryService";
 import { Loader } from "../Utils/Loader";
 function Items() {
   const [items, setItems] = useState([
@@ -64,8 +64,26 @@ function Items() {
     }
   };
 
-  const handleDelete = (id) => {
-    setItems(items.filter((item) => item.id !== id));
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this category?")) return;
+    try {
+      setLoading(true);
+      await deleteCategory(id);
+      const data = await getAllCategory();
+      const categories = data?.data || data;
+      setItems(
+        categories.map((item, index) => ({
+          id: item.id || index,
+          name: item.category_name,
+          image: item.category_image,
+          description: item.description || "No description",
+        }))
+      );
+    } catch (error) {
+      alert("Failed to delete category: " + (error?.response?.data?.message || error.message));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAddItem = async () => {
@@ -187,8 +205,8 @@ useEffect(() => {
                         onChange={(e) => {
                           const file = e.target.files[0];
                           if (file) {
-                            const imageUrl = URL.createObjectURL(file);
-                            setEditValues({ ...editValues, image: imageUrl });
+                            setEditValues({ ...editValues, image: file });
+                            setPreviewImage(URL.createObjectURL(file));
                           }
                         }}
                         className="border p-1 w-full"
@@ -198,11 +216,15 @@ useEffect(() => {
                         {item.image ? (
                           <>
                             <p className="text-sm text-gray-700">
-                              {item.image.split("/").pop()}
+                              {typeof item.image === 'string' ? item.image.split("/").pop() : item.image.name}
                             </p>
                             <button
                               onClick={() => {
-                                setPreviewImage(item.image);
+                                if (typeof item.image === 'string') {
+                                  setPreviewImage(item.image);
+                                } else if (item.image instanceof File) {
+                                  setPreviewImage(URL.createObjectURL(item.image));
+                                }
                                 setIsPreviewOpen(true);
                               }}
                               className="mt-1 bg-blue-500 text-white px-2 py-1 rounded text-sm"
@@ -286,15 +308,15 @@ useEffect(() => {
               onChange={(e) => {
                 const file = e.target.files[0];
                 if (file) {
-                  const imageUrl = URL.createObjectURL(file);
-                  setNewItem({ ...newItem, image: imageUrl });
+                  setNewItem({ ...newItem, image: file });
+                  setPreviewImage(URL.createObjectURL(file));
                 }
               }}
               className="border p-2 w-full mb-2"
             />
-            {newItem.image && (
+            {previewImage && (
               <img
-                src={newItem.image}
+                src={previewImage}
                 alt="Preview"
                 className="w-full h-40 object-cover mb-2 rounded"
               />

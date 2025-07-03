@@ -113,4 +113,15 @@ export const uploadPropertyImagesAPI = async (propertyId, images) => {
     console.error('Error uploading property images:', error?.response?.data || error.message);
     throw error;
   }
+};
+
+export const editPropertyImagesAPI = (propertyId, images) => {
+  const formData = new FormData();
+  formData.append('property_id', propertyId);
+  images.forEach((img) => {
+    formData.append('property_images', img);
+  });
+  return axiosInstance.post('/editPropertyImages', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
 }; 
