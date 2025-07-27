@@ -1,62 +1,61 @@
 .sidebar {
-    width: 240px;
-    height: 100vh;
-    background-color: #f9f9f9;
-    padding: 20px;
-    position: fixed;
-    left: 0;
-    top: 0;
-    border-right: 1px solid #eee;
-    display: flex;
-    flex-direction: column;
-    gap: 30px;
-  }
-  
-  .profile {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  
-  .profile img {
-    width: 50px;
-    border-radius: 50%;
-  }
-  
-  .profile h4 {
-    margin: 0;
-    font-size: 16px;
-  }
-  
-  .profile span {
-    font-size: 12px;
-    color: gray;
-  }
-  
-  .menu {
-    list-style: none;
-    padding: 0;
-  }
-  
-  .menu li {
-    margin-bottom: 20px;
-  }
-  
-  .menu li a {
-    text-decoration: none;
-    color: #333;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px;
-    border-radius: 8px;
-    transition: background 0.2s;
-  }
-  
-  .menu li a:hover,
-  .menu li.active a {
-    background-color: #eee;
-    color: #5e60ce;
-    font-weight: 600;
-  }
-  
+  width: 240px;
+  height: 100vh;
+  background-color: #f9f9f9;
+  padding: 20px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  border-right: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile img {
+  width: 50px;
+  border-radius: 50%;
+}
+
+.profile h4 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.profile span {
+  font-size: 12px;
+  color: gray;
+}
+
+.menu {
+  list-style: none;
+  padding: 0;
+}
+
+.menu li {
+  margin-bottom: 20px;
+}
+
+.menu li a {
+  text-decoration: none;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.menu li a:hover,
+.menu li.active a {
+  background-color: #eee;
+  color: #5e60ce;
+  font-weight: 600;
+}

@@ -124,4 +124,24 @@ export const editPropertyImagesAPI = (propertyId, images) => {
   return axiosInstance.post('/editPropertyImages', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   });
+};
+
+export const fetchAllPropertyRequests = async () => {
+  const token = getToken();
+  try {
+    const response = await axiosInstance.get(
+      '/viewPropertyRequest',
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Cookie': `Admin_token=${token}`,
+        },
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching property requests:', error?.response?.data || error.message);
+    throw error;
+  }
 }; 

@@ -18,7 +18,6 @@ const PropertyListPage = () => {
                 console.log(data, "data");
                 dispatch(setProperties(data.data || []));
             } catch (error) {
-                // handle error, e.g., show toast
                 console.error('Failed to fetch properties', error);
             } finally {
                 setIsLoading(false);
@@ -31,11 +30,8 @@ const PropertyListPage = () => {
         if (!window.confirm('Are you sure you want to delete this property?')) return;
         try {
             await deletePropertyAPI(id);
-            // Option 1: Refetch the list
             const data = await fetchAllProperties();
             dispatch(setProperties(data.data || []));
-            // Option 2: Remove from Redux store directly (uncomment if you prefer this)
-            // dispatch(setProperties(properties.filter((p) => p.id !== id)));
         } catch (error) {
             alert('Failed to delete property.');
         }
@@ -68,7 +64,7 @@ const PropertyListPage = () => {
                         {isLoading ? (
                             <tr>
                                 <td colSpan="6" className="py-16 text-center">
-                                     <Loader />
+                                    <Loader />
                                 </td>
                             </tr>
                         ) : (
@@ -81,7 +77,7 @@ const PropertyListPage = () => {
                                     <td className="px-6 py-4">{property.price}</td>
                                     <td className="px-6 py-4 space-x-2">
                                         <button className="bg-yellow-400 px-3 py-1 rounded text-white hover:bg-yellow-500"
-                                        onClick={() => navigate(`/edit-property/${property.id}`)}
+                                            onClick={() => navigate(`/edit-property/${property.id}`)}
                                         >
                                             Edit
                                         </button>

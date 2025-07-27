@@ -18,6 +18,10 @@ import Policy from './pages/Policy';
 import Terms from './pages/Terms';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import PropertyRequest from './pages/PropertyRequest';
+import ResidentialProjectListPage from './pages/ResidentialProject';
+import ResidentialProjectView from './pages/ResidentialProjectView';
+import ResidentialProjectForm from './pages/ResidentialProjectForm';
 
 function App() {
   const [showSidebar, setShowSidebar] = useState(false);
@@ -74,6 +78,11 @@ function App() {
                     <Route path="/add-property" element={<AddPropertyForm />} />
                     <Route path="/property/:id" element={<PropertyViewPage />} />
                     <Route path="/edit-property/:id" element={<AddPropertyForm />} />
+                    <Route path="/property-requests" element={<PropertyRequest />} />
+                    <Route path="/residential-projects" element={<ResidentialProjectListPage />} />
+                    <Route path="/residential-project/:id" element={<ResidentialProjectView />} />
+                    <Route path="/add-residential-project" element={<ResidentialProjectForm />} />
+                    <Route path="/edit-residential-project/:id" element={<ResidentialProjectForm />} />
                   </Routes>
                 </div>
               </div>

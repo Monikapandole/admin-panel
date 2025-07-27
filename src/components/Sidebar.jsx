@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FaHome, FaCog, FaUsers, FaBlackberry, FaBuilding, FaSignOutAlt, FaMapMarkerAlt, FaBlog, FaFileContract } from 'react-icons/fa';
+import { FaHome, FaCog, FaUsers, FaBlackberry, FaBuilding, FaSignOutAlt, FaMapMarkerAlt, FaBlog, FaFileContract, FaRProject } from 'react-icons/fa';
 import { useDispatch } from 'react-redux';
-import { logout } from '../redux/authSlice'; // adjust path if different
+import { logout } from '../redux/authSlice';
 import './Sidebar.css';
 import { useEffect, useState } from 'react';
 import { fetchAdminProfile } from '../Api/services/authService';
@@ -26,20 +26,17 @@ function Sidebar({ showSidebar, closeSidebar }) {
 
   const handleLogout = () => {
     dispatch(logout());
-    navigate('/login'); // redirect after logout
-    closeSidebar(); // optional: close sidebar on logout
+    navigate('/login');
+    closeSidebar();
   };
 
   return (
     <>
-      {/* Mobile overlay */}
       <div
         className={`fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden transition-opacity duration-300 ${showSidebar ? 'block' : 'hidden'
           }`}
         onClick={closeSidebar}
       />
-
-      {/* Sidebar */}
       <div
         className={`
           fixed top-0 left-0 
@@ -47,6 +44,7 @@ function Sidebar({ showSidebar, closeSidebar }) {
           transform transition-transform duration-300 ease-in-out 
           ${showSidebar ? 'translate-x-0' : '-translate-x-full'} 
           md:translate-x-0 md:static md:block
+          flex flex-col
         `}
       >
         <div className="p-4 border-b flex items-center gap-3">
@@ -56,7 +54,7 @@ function Sidebar({ showSidebar, closeSidebar }) {
             <span className="text-xs text-gray-500">{profile?.role || 'Project Manager'}</span>
           </div>
         </div>
-        <ul className="menu p-4 space-y-3">
+        <ul className="menu p-4 space-y-3 flex-1 overflow-y-auto">
           <li className={location.pathname === '/' ? 'active' : ''}>
             <Link to="/" onClick={closeSidebar}><FaHome /> Dashboard</Link>
           </li>
@@ -65,6 +63,9 @@ function Sidebar({ showSidebar, closeSidebar }) {
           </li>
           <li className={location.pathname === '/properties' ? 'active' : ''}>
             <Link to="/properties" onClick={closeSidebar}><FaBuilding /> Properties</Link>
+          </li>
+          <li className={location.pathname === '/property-requests' ? 'active' : ''}>
+            <Link to="/property-requests" onClick={closeSidebar}><FaFileContract /> Property Requests</Link>
           </li>
           <li className={location.pathname === '/areas' ? 'active' : ''}>
             <Link to="/areas" onClick={closeSidebar}>
@@ -80,7 +81,9 @@ function Sidebar({ showSidebar, closeSidebar }) {
             <Link to="/blogs" onClick={closeSidebar}><FaBlog /> Blogs</Link>
           </li>
 
-
+          <li>
+            <a href="/residential-projects" className="block px-4 py-2 hover:bg-gray-200"><FaRProject /> Residential Projects</a>
+          </li>
 
           <li className={location.pathname === '/users' ? 'active' : ''}>
             <Link to="/users" onClick={closeSidebar}><FaUsers /> Users</Link>
@@ -93,12 +96,12 @@ function Sidebar({ showSidebar, closeSidebar }) {
           <li className={location.pathname === '/terms' ? 'active' : ''}>
             <Link to="/terms" onClick={closeSidebar}><FaFileContract /> Terms</Link>
           </li>
-          <li className="text-red-600 hover:text-red-800 cursor-pointer  p-4">
-            <div onClick={handleLogout} className="flex items-center gap-2">
-              <FaSignOutAlt /> Logout
-            </div>
-          </li>
         </ul>
+        <div className="p-4">
+          <div onClick={handleLogout} className="flex items-center gap-2 text-red-600 hover:text-red-800 cursor-pointer">
+            <FaSignOutAlt /> Logout
+          </div>
+        </div>
       </div>
     </>
   );
