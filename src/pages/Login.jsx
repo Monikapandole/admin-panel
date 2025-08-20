@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import logo from "../assets/applogo.png"
+import logo from "../assets/applogo.jpeg"
 import { loginUserThunk } from '../Api/services/authService';
 import { login } from '../redux/authSlice';
 import { toast } from 'react-toastify';
@@ -38,27 +38,27 @@ export default function Login() {
     return true;
   };
 
- const handleLogin = async (e) => {
-  e.preventDefault();
-  if (!validate()) return;
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    if (!validate()) return;
 
-  setError('');
-  setLoading(true);
-  const formData = new FormData();
-  formData.append('email', email);
-  formData.append('password', password);
-  try {
-    const response = await dispatch(loginUserThunk(formData)).unwrap();
+    setError('');
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('email', email);
+    formData.append('password', password);
+    try {
+      const response = await dispatch(loginUserThunk(formData)).unwrap();
       console.log('Login success:', response);
-    toast.success('Login Successfully!');
-    dispatch(login(response));
-    navigate('/');
-  } catch (err) {
-    setError(err.message || 'Login failed');
-  } finally {
-    setLoading(false);
-  }
-};
+      toast.success('Login Successfully!');
+      dispatch(login(response));
+      navigate('/');
+    } catch (err) {
+      setError(err.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
@@ -72,7 +72,7 @@ export default function Login() {
           />
         </div>
 
-        <h1 className="text-3xl font-semibold text-gray-800 text-center mb-8">
+        <h1 className="text-3xl font-semibold text-gray-800 text-center mb-8 mt-4">
           Admin  Login
         </h1>
 
@@ -164,11 +164,10 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-3 rounded-md text-white font-semibold transition flex items-center justify-center ${
-              loading
-                ? 'bg-blue-300 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700'
-            }`}
+            className={`w-full py-3 rounded-md text-white font-semibold transition flex items-center justify-center ${loading
+              ? 'bg-blue-300 cursor-not-allowed'
+              : 'bg-blue-600 hover:bg-blue-700'
+              }`}
           >
             {loading ? (
               <>
