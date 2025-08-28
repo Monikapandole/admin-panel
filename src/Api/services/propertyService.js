@@ -144,4 +144,29 @@ export const fetchAllPropertyRequests = async () => {
     console.error('Error fetching property requests:', error?.response?.data || error.message);
     throw error;
   }
+};
+
+export const updatePropertyOrderAPI = async (propertyId, orderPosition) => {
+  const token = getToken();
+  try {
+    const formData = new FormData();
+    formData.append('property_id', propertyId);
+    formData.append('order_position', orderPosition);
+    
+    const response = await axiosInstance.post(
+      '/updatePropertyOrder',
+      formData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Cookie': `Admin_token=${token}`,
+        },
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error updating property order:', error?.response?.data || error.message);
+    throw error;
+  }
 }; 
