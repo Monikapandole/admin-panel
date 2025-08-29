@@ -19,6 +19,7 @@ import Terms from './pages/Terms';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import PropertyRequest from './pages/PropertyRequest';
+import UpdateImageOrder from './pages/UpdateImageOrder';
 import ResidentialProjectListPage from './pages/ResidentialProject';
 import ResidentialProjectView from './pages/ResidentialProjectView';
 import ResidentialProjectForm from './pages/ResidentialProjectForm';
@@ -77,6 +78,7 @@ function App() {
                     <Route path="/properties" element={<PropertyListPage />} />
                     <Route path="/add-property" element={<AddPropertyForm />} />
                     <Route path="/property/:id" element={<PropertyViewPage />} />
+                    <Route path="/update-image-order/:id" element={<UpdateImageOrder />} />
                     <Route path="/edit-property/:id" element={<AddPropertyForm />} />
                     <Route path="/property-requests" element={<PropertyRequest />} />
                     <Route path="/residential-projects" element={<ResidentialProjectListPage />} />

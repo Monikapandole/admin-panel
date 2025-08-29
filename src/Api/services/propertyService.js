@@ -169,4 +169,30 @@ export const updatePropertyOrderAPI = async (propertyId, orderPosition) => {
     console.error('Error updating property order:', error?.response?.data || error.message);
     throw error;
   }
+};
+
+export const updatePropertyImagesOrderAPI = async (imageId, propertyId, orderPosition) => {
+  const token = getToken();
+  try {
+    const formData = new FormData();
+    formData.append('image_id', imageId);
+    formData.append('property_id', propertyId);
+    formData.append('order_position', orderPosition);
+    
+    const response = await axiosInstance.post(
+      '/updatePropertyImagesOrder',
+      formData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Cookie': `Admin_token=${token}`,
+        },
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error updating property image order:', error?.response?.data || error.message);
+    throw error;
+  }
 }; 
